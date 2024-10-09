@@ -1,0 +1,23 @@
+﻿@model FreelancerProfileModel
+<div class="container">
+    <h2>Профиль фрилансера</h2>
+    <p><strong>Навыки:</strong> @Model.Skills</p>
+    <p><strong>О себе:</strong> @Model.Bio</p>
+
+    <h3>Текущие проекты</h3>
+    <ul>
+        @foreach (var project in Model.CurrentProjects)
+        {
+            <li>@project.Title - @project.Description</li>
+        }
+    </ul>
+
+    <h3>История проектов</h3>
+    <ul>
+        @foreach (var project in Model.CompletedProjects)
+        {
+            <li>@project.Title - @project.Description</li>
+        }
+    </ul>
+</div>
+

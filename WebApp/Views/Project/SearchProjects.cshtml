@@ -1,0 +1,15 @@
+﻿@model List<ProjectModel>
+<div class="container">
+    <h2>Поиск проектов</h2>
+    <ul>
+        @foreach (var project in Model)
+        {
+            <li>
+                <strong>@project.Title</strong>
+                <p>@project.Description</p>
+                <p><strong>Бюджет:</strong> @project.Budget</p>
+            </li>
+        }
+    </ul>
+</div>
+

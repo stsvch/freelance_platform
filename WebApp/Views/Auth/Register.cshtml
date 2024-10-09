@@ -1,0 +1,27 @@
+﻿@model UserRegisterModel
+<div class="container">
+    <h2>Регистрация</h2>
+    <form asp-action="Register" method="post">
+        <div class="mb-3">
+            <label for="username" class="form-label">Имя пользователя</label>
+            <input type="text" class="form-control" id="username" asp-for="Username">
+        </div>
+        <div class="mb-3">
+            <label for="email" class="form-label">Электронная почта</label>
+            <input type="email" class="form-control" id="email" asp-for="Email">
+        </div>
+        <div class="mb-3">
+            <label for="password" class="form-label">Пароль</label>
+            <input type="password" class="form-control" id="password" asp-for="Password">
+        </div>
+        <div class="mb-3">
+            <label for="role" class="form-label">Роль</label>
+            <select class="form-select" asp-for="Role">
+                <option value="Freelancer">Фрилансер</option>
+                <option value="Client">Заказчик</option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Зарегистрироваться</button>
+    </form>
+</div>
+
