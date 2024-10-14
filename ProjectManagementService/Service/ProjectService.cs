@@ -15,7 +15,7 @@ namespace ProjectManagementService.Service
     public class ProjectService : IProjectService
     {
         private readonly ProjectDbContext _context;
-        private readonly IMessageBus _messageBus; // Интерфейс для работы с брокером сообщений
+        private readonly IMessageBus _messageBus;
 
         public ProjectService(ProjectDbContext context, IMessageBus messageBus)
         {
@@ -27,11 +27,13 @@ namespace ProjectManagementService.Service
         {
             project.CreatedAt = DateTime.UtcNow;
             project.UpdatedAt = DateTime.UtcNow;
+
             _context.Projects.Add(project);
             await _context.SaveChangesAsync();
 
-            // Отправка сообщения о создании проекта
+            // Отправляем сообщение о создании проекта через RabbitMQ
             await _messageBus.PublishAsync("ProjectCreated", project);
+
             return project;
         }
 

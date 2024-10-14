@@ -12,24 +12,32 @@ namespace ProjectManagementService.Service
         Task PublishAsync(string topic, object message);
     }
 
-    // Messaging/RabbitMqMessageBus.cs
     public class RabbitMqMessageBus : IMessageBus
     {
-        private readonly RabbitMQ.Client.IModel _channel;
+        private readonly IModel _channel;
 
         public RabbitMqMessageBus(IModel channel)
         {
             _channel = channel;
+
+            // Настройка очереди (при необходимости)
+            _channel.ExchangeDeclare(exchange: "project_exchange", type: ExchangeType.Topic);
         }
 
-        public async Task PublishAsync(string topic, object message)
+        // Публикация сообщений в RabbitMQ
+        public Task PublishAsync(string topic, object message)
         {
-            var body = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(message));
-            _channel.BasicPublish(exchange: "project_exchange",
-                                   routingKey: topic,
-                                   basicProperties: null,
-                                   body: body);
-            await Task.CompletedTask;
+            var jsonMessage = JsonConvert.SerializeObject(message);
+            var body = Encoding.UTF8.GetBytes(jsonMessage);
+
+            _channel.BasicPublish(
+                exchange: "project_exchange",
+                routingKey: topic,
+                basicProperties: null,
+                body: body
+            );
+
+            return Task.CompletedTask;
         }
     }
 

@@ -1,15 +1,16 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using WebApp.Models;
+using WebApp.Services;
 
 namespace WebApp.Controllers
 {
     public class AuthController : Controller
     {
-        private readonly IHttpClientFactory _httpClientFactory;
+        private readonly RabbitMqService _rabbitMqService;
 
-        public AuthController(IHttpClientFactory httpClientFactory)
+        public AuthController(RabbitMqService rabbitMqService)
         {
-            _httpClientFactory = httpClientFactory;
+            _rabbitMqService = rabbitMqService;
         }
 
         // Страница регистрации
@@ -21,16 +22,25 @@ namespace WebApp.Controllers
         [HttpPost]
         public async Task<IActionResult> Register(UserRegisterModel model)
         {
-            var client = _httpClientFactory.CreateClient("UserManagementService");
-            var response = await client.PostAsJsonAsync("auth/register", model);
-
-            if (response.IsSuccessStatusCode)
+            if (!ModelState.IsValid)
             {
-                return RedirectToAction("Login");
+                return View(model);
             }
 
-            ModelState.AddModelError("", "Ошибка регистрации.");
-            return View(model);
+            // Создаем сообщение для отправки
+            var message = new
+            {
+                Username = model.Username,
+                Password = model.Password,
+                Email = model.Email,
+                Role = model.Role
+            };
+
+            // Отправляем сообщение в RabbitMQ
+            _rabbitMqService.PublishMessage(message, "userRegistrationQueue");
+
+            // Предполагаем, что микросервис обработает сообщение и ответит асинхронно
+            return RedirectToAction("Login");
         }
 
         // Страница входа
@@ -42,19 +52,25 @@ namespace WebApp.Controllers
         [HttpPost]
         public async Task<IActionResult> Login(UserLoginModel model)
         {
-            var client = _httpClientFactory.CreateClient("UserManagementService");
-            var response = await client.PostAsJsonAsync("auth/login", model);
-
-            if (response.IsSuccessStatusCode)
+            if (!ModelState.IsValid)
             {
-                var token = await response.Content.ReadAsStringAsync();
-                // Логика сохранения токена
-                return RedirectToAction("Profile", "Profile");
+                return View(model);
             }
 
-            ModelState.AddModelError("", "Неверные учетные данные.");
-            return View(model);
+            // Создаем сообщение для отправки
+            var message = new
+            {
+                Username = model.Username,
+                Password = model.Password
+            };
+
+            // Отправляем сообщение в RabbitMQ для авторизации
+            _rabbitMqService.PublishMessage(message, "userLoginQueue");
+
+            // После отправки, редиректим на страницу профиля
+            return RedirectToAction("Profile", "Profile");
         }
     }
+
 
 }

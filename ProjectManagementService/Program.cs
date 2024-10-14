@@ -1,42 +1,64 @@
+using Microsoft.EntityFrameworkCore;
+using ProjectManagementService.Service;
+using RabbitMQ.Client;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Добавление сервисов HttpClient для взаимодействия с микросервисами
-builder.Services.AddHttpClient("UserMenegementService", client =>
+// Настройка базы данных MySQL
+builder.Services.AddDbContext<ProjectDbContext>(options =>
+    options.UseMySql(builder.Configuration.GetConnectionString("DefaultConnection"),
+    new MySqlServerVersion(new Version(8, 0, 21))));
+
+// Настройки RabbitMQ
+builder.Services.AddSingleton<IConnectionFactory>(sp =>
 {
-    client.BaseAddress = new Uri("http://localhost:5001/api/");
-});
-builder.Services.AddHttpClient("ProjectManagementService", client =>
-{
-    client.BaseAddress = new Uri("http://localhost:5002/api/");
-});
-builder.Services.AddHttpClient("SearchService", client =>
-{
-    client.BaseAddress = new Uri("http://localhost:5003/api/");
-});
-builder.Services.AddHttpClient("RatingService", client =>
-{
-    client.BaseAddress = new Uri("http://localhost:5004/api/");
-});
-builder.Services.AddHttpClient("NotificationService", client =>
-{
-    client.BaseAddress = new Uri("http://localhost:5005/api/");
+    var config = sp.GetRequiredService<IConfiguration>();
+    return new ConnectionFactory
+    {
+        HostName = config["RabbitMQ:HostName"],
+        Port = int.Parse(config["RabbitMQ:Port"]),
+        UserName = config["RabbitMQ:UserName"],
+        Password = config["RabbitMQ:Password"]
+    };
 });
 
-// Если это Web API, то используем AddControllers
+builder.Services.AddSingleton<IModel>(sp =>
+{
+    var factory = sp.GetRequiredService<IConnectionFactory>();
+    var connection = factory.CreateConnection();
+    return connection.CreateModel();
+});
+
+builder.Services.AddSingleton<IMessageBus, RabbitMqMessageBus>();
+builder.Services.AddScoped<IProjectService, ProjectService>();
+
 builder.Services.AddControllers();
+
+// Swagger (если нужно для тестирования)
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Middleware для работы со статическими файлами
-app.UseStaticFiles();
-
-// Включаем маршрутизацию
-app.UseRouting();
-
-app.UseEndpoints(endpoints =>
+// Добавление миграций или создания базы данных
+using (var scope = app.Services.CreateScope())
 {
-    endpoints.MapControllers(); // Для API
-});
+    var dbContext = scope.ServiceProvider.GetRequiredService<ProjectDbContext>();
+
+    // Применение миграций при запуске приложения
+    dbContext.Database.Migrate();
+}
+
+// Если в режиме разработки, включаем Swagger UI для тестирования API
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+app.UseHttpsRedirection();
+app.UseRouting();
+app.MapControllers();
 
 app.Run();
 
