@@ -43,13 +43,13 @@ namespace WebApp.Controllers
             var correlationId = Guid.NewGuid().ToString();
             var message = JsonConvert.SerializeObject(new
             {
-                action = "create",
-                title = project.Title,
-                budget = project.Budget,
-                description = project.Description,
-                clientId = 1,
-                freelancerId = (int?)null,
-                correlationId = correlationId
+                Action = "Create",
+                Title = project.Title,
+                Budget = project.Budget,
+                Description = project.Description,
+                ClientId = 1,
+                FreelancerId = (int?)null,
+                CorrelationId = correlationId
             });
 
             // Отправляем сообщение в очередь RabbitMQ
@@ -59,9 +59,10 @@ namespace WebApp.Controllers
             _rabbitMqService.ListenForMessages("ProjectResponseQueue", (responseMessage) =>
             {
                 var response = JsonConvert.DeserializeObject<dynamic>(responseMessage);
-                if (response.action == "create" && response.correlationId == correlationId)
+                Console.WriteLine(response.ToString()); 
+                if (response.Action == "Create" && response.CorrelationId == correlationId)
                 {
-                    if (response.status == "success")
+                    if (response.Status == "Success")
                     {
                         TempData["SuccessMessage"] = "Проект успешно создан!";
                     }
@@ -82,12 +83,12 @@ namespace WebApp.Controllers
             var correlationId = Guid.NewGuid().ToString();
             var message = JsonConvert.SerializeObject(new
             {
-                action = "update",
-                projectId = id,
-                title = project.Title,
-                budget = project.Budget,
-                description = project.Description,
-                correlationId = correlationId
+                Action = "Update",
+                ProjectId = id,
+                Title = project.Title,
+                Budget = project.Budget,
+                Description = project.Description,
+                CorrelationId = correlationId
             });
 
             // Отправляем сообщение в очередь RabbitMQ
@@ -97,9 +98,9 @@ namespace WebApp.Controllers
             _rabbitMqService.ListenForMessages("ProjectResponseQueue", (responseMessage) =>
             {
                 var response = JsonConvert.DeserializeObject<dynamic>(responseMessage);
-                if (response.action == "update" && response.correlationId == correlationId)
+                if (response.Action == "Update" && response.CorrelationId == correlationId)
                 {
-                    if (response.status == "success")
+                    if (response.Status == "Success")
                     {
                         TempData["SuccessMessage"] = "Проект успешно обновлен!";
                     }
@@ -120,9 +121,9 @@ namespace WebApp.Controllers
             var correlationId = Guid.NewGuid().ToString();
             var message = JsonConvert.SerializeObject(new
             {
-                action = "delete",
-                projectId = id,
-                correlationId = correlationId
+                Action = "Delete",
+                ProjectId = id,
+                CorrelationId = correlationId
             });
 
             // Отправляем сообщение в очередь RabbitMQ
@@ -132,9 +133,9 @@ namespace WebApp.Controllers
             _rabbitMqService.ListenForMessages("ProjectResponseQueue", (responseMessage) =>
             {
                 var response = JsonConvert.DeserializeObject<dynamic>(responseMessage);
-                if (response.action == "delete" && response.correlationId == correlationId)
+                if (response.Action == "Delete" && response.CorrelationId == correlationId)
                 {
-                    if (response.status == "success")
+                    if (response.Status == "Success")
                     {
                         TempData["SuccessMessage"] = "Проект успешно удален!";
                     }

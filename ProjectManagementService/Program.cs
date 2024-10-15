@@ -1,15 +1,19 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using ProjectManagementService.Service;
 using RabbitMQ.Client;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddSingleton<IProjectService, ProjectService>();
 
-// Настройка базы данных MySQL
+
 builder.Services.AddDbContext<ProjectDbContext>(options =>
-    options.UseMySql(builder.Configuration.GetConnectionString("DefaultConnection"),
-    new MySqlServerVersion(new Version(8, 0, 21))));
+    options.UseMySql(
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        new MySqlServerVersion(new Version(8, 0, 39))));
 
-// Настройки RabbitMQ
+
+// Настройка RabbitMQ
 builder.Services.AddSingleton<IConnection>(sp =>
 {
     var config = sp.GetRequiredService<IConfiguration>();
@@ -29,14 +33,11 @@ builder.Services.AddSingleton<IModel>(sp =>
     return connection.CreateModel(); // Создаем канал для обмена сообщениями
 });
 
-builder.Services.AddSingleton<IMessageBus, RabbitMqMessageBus>(); // Регистрация RabbitMqMessageBus
-builder.Services.AddScoped<IProjectService, ProjectService>(); // Регистрация ProjectService
+// Регистрируем IMessageBus как Singleton
+builder.Services.AddSingleton<IMessageBus, RabbitMqMessageBus>();
+
 
 builder.Services.AddControllers();
-
-// Swagger (если нужно для тестирования)
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
@@ -44,21 +45,25 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<ProjectDbContext>();
-
-    // Применение миграций при запуске приложения
     dbContext.Database.Migrate();
 }
 
-// Если в режиме разработки, включаем Swagger UI для тестирования API
-if (app.Environment.IsDevelopment())
+// Теперь после создания всех сервисов вызываем StartListeningForMessages()
+using (var scope = app.Services.CreateScope())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    var projectService = scope.ServiceProvider.GetRequiredService<IProjectService>();
+    if (projectService is ProjectService service)
+    {
+        service.StartListeningForMessages(); // Начинаем прослушивание сообщений
+    }
 }
 
-app.UseHttpsRedirection();
 app.UseRouting();
 app.MapControllers();
 
 app.Run();
+
+
+
+
 
