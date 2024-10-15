@@ -3,13 +3,16 @@ using Newtonsoft.Json;
 using System.Text;
 using RabbitMQ.Client;
 using IModel = RabbitMQ.Client.IModel;
+using RabbitMQ.Client.Events;
 
 namespace ProjectManagementService.Service
 {
     // Messaging/IMessageBus.cs
+    // Services/IMessageBus.cs
     public interface IMessageBus
     {
-        Task PublishAsync(string topic, object message);
+        Task PublishAsync(string queueName, string message);
+        void ListenForMessages(string queueName, Func<string, Task> onMessageReceived);
     }
 
     public class RabbitMqMessageBus : IMessageBus
@@ -19,25 +22,41 @@ namespace ProjectManagementService.Service
         public RabbitMqMessageBus(IModel channel)
         {
             _channel = channel;
+            // Объявляем очередь (если она еще не существует)
+            // Делаем очередь "ProjectQueue" доступной
+            _channel.QueueDeclare(queue: "ProjectQueue", durable: false, exclusive: false, autoDelete: false, arguments: null);
 
-            // Настройка очереди (при необходимости)
-            _channel.ExchangeDeclare(exchange: "project_exchange", type: ExchangeType.Topic);
+            // Делаем очередь "ProjectResponseQueue" доступной для отправки ответов
+            _channel.QueueDeclare(queue: "ProjectResponseQueue", durable: false, exclusive: false, autoDelete: false, arguments: null);
         }
 
-        // Публикация сообщений в RabbitMQ
-        public Task PublishAsync(string topic, object message)
+        // Отправка сообщения в очередь
+        public async Task PublishAsync(string queueName, string message)
         {
-            var jsonMessage = JsonConvert.SerializeObject(message);
-            var body = Encoding.UTF8.GetBytes(jsonMessage);
+            _channel.QueueDeclare(queue: queueName, durable: true, exclusive: false, autoDelete: false, arguments: null);
+            var body = Encoding.UTF8.GetBytes(message);
 
-            _channel.BasicPublish(
-                exchange: "project_exchange",
-                routingKey: topic,
-                basicProperties: null,
-                body: body
-            );
+            _channel.BasicPublish(exchange: "", routingKey: queueName, basicProperties: null, body: body);
+            await Task.CompletedTask;
+        }
 
-            return Task.CompletedTask;
+        // Прослушивание сообщений из очереди
+        public void ListenForMessages(string queueName, Func<string, Task> onMessageReceived)
+        {
+            _channel.QueueDeclare(queue: queueName, durable: true, exclusive: false, autoDelete: false, arguments: null);
+
+            var consumer = new EventingBasicConsumer(_channel);
+            consumer.Received += (model, ea) =>
+            {
+                var body = ea.Body.ToArray();
+                var message = Encoding.UTF8.GetString(body);
+
+                // Обработка полученного сообщения
+                onMessageReceived(message);
+            };
+
+            // Начинаем прослушивание очереди
+            _channel.BasicConsume(queue: queueName, autoAck: true, consumer: consumer);
         }
     }
 

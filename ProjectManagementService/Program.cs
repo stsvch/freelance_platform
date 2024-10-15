@@ -10,27 +10,27 @@ builder.Services.AddDbContext<ProjectDbContext>(options =>
     new MySqlServerVersion(new Version(8, 0, 21))));
 
 // Настройки RabbitMQ
-builder.Services.AddSingleton<IConnectionFactory>(sp =>
+builder.Services.AddSingleton<IConnection>(sp =>
 {
     var config = sp.GetRequiredService<IConfiguration>();
-    return new ConnectionFactory
+    var factory = new ConnectionFactory
     {
         HostName = config["RabbitMQ:HostName"],
         Port = int.Parse(config["RabbitMQ:Port"]),
         UserName = config["RabbitMQ:UserName"],
         Password = config["RabbitMQ:Password"]
     };
+    return factory.CreateConnection(); // Создаем подключение к RabbitMQ
 });
 
 builder.Services.AddSingleton<IModel>(sp =>
 {
-    var factory = sp.GetRequiredService<IConnectionFactory>();
-    var connection = factory.CreateConnection();
-    return connection.CreateModel();
+    var connection = sp.GetRequiredService<IConnection>();
+    return connection.CreateModel(); // Создаем канал для обмена сообщениями
 });
 
-builder.Services.AddSingleton<IMessageBus, RabbitMqMessageBus>();
-builder.Services.AddScoped<IProjectService, ProjectService>();
+builder.Services.AddSingleton<IMessageBus, RabbitMqMessageBus>(); // Регистрация RabbitMqMessageBus
+builder.Services.AddScoped<IProjectService, ProjectService>(); // Регистрация ProjectService
 
 builder.Services.AddControllers();
 
@@ -40,7 +40,7 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Добавление миграций или создания базы данных
+// Добавление миграций или создание базы данных
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<ProjectDbContext>();
@@ -61,7 +61,4 @@ app.UseRouting();
 app.MapControllers();
 
 app.Run();
-
-
-
 

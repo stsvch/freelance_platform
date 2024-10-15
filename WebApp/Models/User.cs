@@ -1,12 +1,5 @@
 ﻿namespace WebApp.Models
 {
-    public class ProjectModel
-    {
-        public string Title { get; set; }
-        public string Description { get; set; }
-        public decimal Budget { get; set; }
-    }
-
     public class UserRegisterModel
     {
         public string Username { get; set; }

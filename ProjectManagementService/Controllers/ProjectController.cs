@@ -14,41 +14,6 @@ namespace ProjectManagementService.Controllers
         {
             _projectService = projectService;
         }
-
-        [HttpPost]
-        public async Task<IActionResult> CreateProject([FromBody] Project project)
-        {
-            var result = await _projectService.CreateProjectAsync(project);
-            return CreatedAtAction(nameof(GetProject), new { id = result.Id }, result);
-        }
-
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetProject(int id)
-        {
-            var project = await _projectService.GetProjectAsync(id);
-            if (project == null)
-            {
-                return NotFound();
-            }
-            return Ok(project);
-        }
-
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateProject(int id, [FromBody] Project project)
-        {
-            if (id != project.Id)
-            {
-                return BadRequest();
-            }
-            await _projectService.UpdateProjectAsync(project);
-            return NoContent();
-        }
-
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteProject(int id)
-        {
-            await _projectService.DeleteProjectAsync(id);
-            return NoContent();
-        }
     }
+
 }

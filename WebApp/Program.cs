@@ -1,49 +1,49 @@
+using RabbitMQ.Client;
+using WebApp.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
-var baseApiUri = "http://localhost:";
+// Настройки RabbitMQ с использованием IConfiguration
+builder.Services.AddSingleton<IConnection>(sp =>
+{
+    var config = sp.GetRequiredService<IConfiguration>();
+    var factory = new ConnectionFactory
+    {
+        HostName = config["RabbitMQ:HostName"],
+        Port = int.Parse(config["RabbitMQ:Port"]),
+        UserName = config["RabbitMQ:UserName"],
+        Password = config["RabbitMQ:Password"]
+    };
+    return factory.CreateConnection();
+});
 
-builder.Services.AddHttpClient("UserManagementService", client =>
+builder.Services.AddSingleton<IModel>(sp =>
 {
-    client.BaseAddress = new Uri($"{baseApiUri}5001/api/");
+    var connection = sp.GetRequiredService<IConnection>();
+    return connection.CreateModel();
 });
-builder.Services.AddHttpClient("ProjectManagementService", client =>
-{
-    client.BaseAddress = new Uri($"{baseApiUri}5002/api/");
-});
-builder.Services.AddHttpClient("SearchService", client =>
-{
-    client.BaseAddress = new Uri($"{baseApiUri}5003/api/");
-});
-builder.Services.AddHttpClient("RatingService", client =>
-{
-    client.BaseAddress = new Uri($"{baseApiUri}5004/api/");
-});
-builder.Services.AddHttpClient("NotificationService", client =>
-{
-    client.BaseAddress = new Uri($"{baseApiUri}5005/api/");
-});
+
+// Настроим RabbitMqService для работы с RabbitMQ
+builder.Services.AddSingleton<RabbitMqService>();
 
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
 
-app.UseStaticFiles();
-
+app.UseHttpsRedirection();
 app.UseRouting();
+app.UseStaticFiles(); // Статические файлы (CSS, JS)
 
 app.UseEndpoints(endpoints =>
 {
-    endpoints.MapControllerRoute(
-        name: "default",
-        pattern: "{controller=Auth}/{action=Login}/{id?}");
-    endpoints.MapControllerRoute(
-        name: "profile",
-        pattern: "Profile/{action=ClientProfile}/{id?}",
-        defaults: new { controller = "Profile" });
+    endpoints.MapDefaultControllerRoute();
 });
 
-// Запуск приложения
 app.Run();
+
+
+
+
 
 
 

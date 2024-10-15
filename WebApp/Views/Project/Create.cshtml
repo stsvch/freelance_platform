@@ -1,0 +1,36 @@
+﻿@model ProjectModel
+
+<div class="container">
+    <h2>Создать новый проект</h2>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["ErrorMessage"]
+        </div>
+    }
+
+    <form asp-action="CreateProject" method="post">
+        <div class="mb-3">
+            <label for="title" class="form-label">Название проекта</label>
+            <input type="text" class="form-control" id="title" asp-for="Title">
+        </div>
+        <div class="mb-3">
+            <label for="description" class="form-label">Описание проекта</label>
+            <textarea class="form-control" id="description" asp-for="Description"></textarea>
+        </div>
+        <div class="mb-3">
+            <label for="budget" class="form-label">Бюджет</label>
+            <input type="number" class="form-control" id="budget" asp-for="Budget">
+        </div>
+        <button type="submit" class="btn btn-primary">Создать проект</button>
+    </form>
+</div>
+
+

@@ -1,17 +1,16 @@
-﻿using ProjectManagementService.Model;
+﻿using Newtonsoft.Json;
+using ProjectManagementService.Model;
 
 namespace ProjectManagementService.Service
 {
     // Services/IProjectService.cs
     public interface IProjectService
     {
-        Task<Project> CreateProjectAsync(Project project);
-        Task<Project> GetProjectAsync(int id);
-        Task UpdateProjectAsync(Project project);
-        Task DeleteProjectAsync(int id);
+        Task CreateProjectAsync(dynamic projectMessage);
+        Task UpdateProjectAsync(dynamic projectMessage);
+        Task DeleteProjectAsync(dynamic projectMessage);
     }
 
-    // Services/ProjectService.cs
     public class ProjectService : IProjectService
     {
         private readonly ProjectDbContext _context;
@@ -21,42 +20,143 @@ namespace ProjectManagementService.Service
         {
             _context = context;
             _messageBus = messageBus;
+            _messageBus.ListenForMessages("ProjectQueue", HandleProjectMessage);
         }
 
-        public async Task<Project> CreateProjectAsync(Project project)
+        private async Task HandleProjectMessage(string message)
         {
-            project.CreatedAt = DateTime.UtcNow;
-            project.UpdatedAt = DateTime.UtcNow;
+            var projectMessage = JsonConvert.DeserializeObject<dynamic>(message);
+            var action = projectMessage.action.ToString(); // Проверяем, что за действие
 
-            _context.Projects.Add(project);
-            await _context.SaveChangesAsync();
-
-            // Отправляем сообщение о создании проекта через RabbitMQ
-            await _messageBus.PublishAsync("ProjectCreated", project);
-
-            return project;
+            switch (action)
+            {
+                case "create":
+                    await CreateProjectAsync(projectMessage);
+                    break;
+                case "update":
+                    await UpdateProjectAsync(projectMessage);
+                    break;
+                case "delete":
+                    await DeleteProjectAsync(projectMessage);
+                    break;
+                default:
+                    Console.WriteLine($"Неизвестное действие: {action}");
+                    break;
+            }
         }
 
-        public async Task<Project> GetProjectAsync(int id)
+        // Создание проекта
+        public async Task CreateProjectAsync(dynamic projectMessage)
         {
-            return await _context.Projects.FindAsync(id);
+            var correlationId = projectMessage.correlationId.ToString();
+
+            try
+            {
+                var project = new Project
+                {
+                    Title = projectMessage.title,
+                    Description = projectMessage.description,
+                    ClientId = projectMessage.clientId,
+                    FreelancerId = projectMessage.freelancerId,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+
+                _context.Projects.Add(project);
+                await _context.SaveChangesAsync();
+
+                var successMessage = new
+                {
+                    status = "Success",
+                    projectId = project.Id,
+                    correlationId = correlationId,
+                    Message = "Проект успешно создан"
+                };
+                await _messageBus.PublishAsync("ProjectResponseQueue", JsonConvert.SerializeObject(successMessage));
+            }
+            catch (Exception ex)
+            {
+                var errorMessage = new
+                {
+                    status = "Error",
+                    correlationId = correlationId,
+                    Message = ex.Message
+                };
+                await _messageBus.PublishAsync("ProjectResponseQueue", JsonConvert.SerializeObject(errorMessage));
+            }
         }
 
-        public async Task UpdateProjectAsync(Project project)
+        public async Task UpdateProjectAsync(dynamic projectMessage)
         {
-            project.UpdatedAt = DateTime.UtcNow;
-            _context.Projects.Update(project);
-            await _context.SaveChangesAsync();
+            var correlationId = projectMessage.correlationId.ToString();
+
+            try
+            {
+                var project = await _context.Projects.FindAsync((int)projectMessage.projectId);
+                if (project == null)
+                    throw new Exception("Проект не найден");
+
+                project.Title = projectMessage.title ?? project.Title;
+                project.Description = projectMessage.description ?? project.Description;
+                project.UpdatedAt = DateTime.UtcNow;
+
+                _context.Projects.Update(project);
+                await _context.SaveChangesAsync();
+
+                var successMessage = new
+                {
+                    Status = "Success",
+                    ProjectId = project.Id,
+                    CorrelationId = correlationId,
+                    Message = "Проект успешно обновлен"
+                };
+                await _messageBus.PublishAsync("ProjectResponseQueue", JsonConvert.SerializeObject(successMessage));
+            }
+            catch (Exception ex)
+            {
+                var errorMessage = new
+                {
+                    Status = "Error",
+                    CorrelationId = correlationId,
+                    Message = ex.Message
+                };
+                await _messageBus.PublishAsync("ProjectResponseQueue", JsonConvert.SerializeObject(errorMessage));
+            }
         }
 
-        public async Task DeleteProjectAsync(int id)
+        public async Task DeleteProjectAsync(dynamic projectMessage)
         {
-            var project = await _context.Projects.FindAsync(id);
-            if (project == null) return;
+            var correlationId = projectMessage.correlationId.ToString();
 
-            _context.Projects.Remove(project);
-            await _context.SaveChangesAsync();
+            try
+            {
+                var project = await _context.Projects.FindAsync((int)projectMessage.projectId);
+                if (project == null)
+                    throw new Exception("Проект не найден");
+
+                _context.Projects.Remove(project);
+                await _context.SaveChangesAsync();
+
+                var successMessage = new
+                {
+                    Status = "Success",
+                    ProjectId = project.Id,
+                    CorrelationId = correlationId,
+                    Message = "Проект успешно удален"
+                };
+                await _messageBus.PublishAsync("ProjectResponseQueue", JsonConvert.SerializeObject(successMessage));
+            }
+            catch (Exception ex)
+            {
+                var errorMessage = new
+                {
+                    Status = "Error",
+                    CorrelationId = correlationId,
+                    Message = ex.Message
+                };
+                await _messageBus.PublishAsync("ProjectResponseQueue", JsonConvert.SerializeObject(errorMessage));
+            }
         }
     }
-
 }
+

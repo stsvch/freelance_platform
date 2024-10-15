@@ -6,48 +6,39 @@ namespace WebApp.Services
 {
     public class RabbitMqService
     {
-        private readonly IConnection _connection;
         private readonly IModel _channel;
-        private readonly UserService _userService; // Сервис для работы с пользователями
 
-        public RabbitMqService(IConnection connection, UserService userService)
+        public RabbitMqService(IModel channel)
         {
-            _connection = connection;
-            _channel = _connection.CreateModel();
-            _userService = userService;
-
-            // Создаем очереди
-            _channel.QueueDeclare(queue: "userRegistrationQueue", durable: false, exclusive: false, autoDelete: false, arguments: null);
-            _channel.QueueDeclare(queue: "userLoginQueue", durable: false, exclusive: false, autoDelete: false, arguments: null);
+            _channel = channel;
         }
 
-        public void ListenForMessages()
+        // Отправка сообщения в очередь RabbitMQ
+        public void PublishMessage(string queueName, string message, string correlationId)
         {
-            var registrationConsumer = new EventingBasicConsumer(_channel);
-            registrationConsumer.Received += async (model, ea) =>
+            var properties = _channel.CreateBasicProperties();
+            properties.CorrelationId = correlationId;
+
+            _channel.QueueDeclare(queue: queueName, durable: false, exclusive: false, autoDelete: false, arguments: null);
+            var body = Encoding.UTF8.GetBytes(message);
+
+            _channel.BasicPublish(exchange: "", routingKey: queueName, basicProperties: properties, body: body);
+        }
+
+        // Прослушивание сообщений из очереди RabbitMQ
+        public void ListenForMessages(string queueName, Action<string> onMessageReceived)
+        {
+            _channel.QueueDeclare(queue: queueName, durable: false, exclusive: false, autoDelete: false, arguments: null);
+            var consumer = new EventingBasicConsumer(_channel);
+
+            consumer.Received += (model, ea) =>
             {
                 var body = ea.Body.ToArray();
                 var message = Encoding.UTF8.GetString(body);
-                var registrationData = JsonConvert.DeserializeObject<UserRegisterModel>(message);
-
-                // Обработка регистрации
-                await _userService.RegisterUserAsync(registrationData);
+                onMessageReceived(message);
             };
 
-            _channel.BasicConsume(queue: "userRegistrationQueue", autoAck: true, consumer: registrationConsumer);
-
-            var loginConsumer = new EventingBasicConsumer(_channel);
-            loginConsumer.Received += async (model, ea) =>
-            {
-                var body = ea.Body.ToArray();
-                var message = Encoding.UTF8.GetString(body);
-                var loginData = JsonConvert.DeserializeObject<UserLoginModel>(message);
-
-                // Обработка авторизации
-                await _userService.AuthenticateAsync(loginData);
-            };
-
-            _channel.BasicConsume(queue: "userLoginQueue", autoAck: true, consumer: loginConsumer);
+            _channel.BasicConsume(queue: queueName, autoAck: true, consumer: consumer);
         }
     }
 
