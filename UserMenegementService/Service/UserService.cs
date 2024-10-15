@@ -12,118 +12,90 @@ namespace UserMenegementService.Service
 {
     public interface IUserService
     {
-        public Task<IdentityResult> RegisterUserAsync(UserRegisterModel model);
-        public Task<string> AuthenticateAsync(UserLoginModel model);
-        public Task NotifyUserRegistered(string email);
+        Task<User> AuthenticateUserAsync(string username, string password);
+        Task<User> RegisterUserAsync(UserRegisterModel registerModel);
     }
-
     public class UserService : IUserService
     {
         private readonly UserDbContext _context;
-        private readonly IPasswordHasher<User> _passwordHasher;
-        private readonly IConfiguration _configuration;
-        private readonly RabbitMqService _rabbitMqService;
 
-        public UserService(UserDbContext context, IPasswordHasher<User> passwordHasher, IConfiguration configuration, RabbitMqService rabbitMqService)
+        public UserService(UserDbContext context)
         {
             _context = context;
-            _passwordHasher = passwordHasher;
-            _configuration = configuration;
-            _rabbitMqService = rabbitMqService;
         }
 
-        // Метод для регистрации пользователя
-        public async Task<IdentityResult> RegisterUserAsync(UserRegisterModel model)
+        // Аутентификация пользователя
+        public async Task<User> AuthenticateUserAsync(string username, string password)
         {
-            var user = new User
-            {
-                Username = model.Username,
-                Email = model.Email,
-                CreatedAt = DateTime.UtcNow,
-                Role = model.Role,
-                PasswordHash = _passwordHasher.HashPassword(null, model.Password) // создаем hash пароля
-            };
-
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
-            return IdentityResult.Success;
-        }
-
-        // Метод для аутентификации пользователя
-        public async Task<string> AuthenticateAsync(UserLoginModel model)
-        {
-            var user = await _context.Users.SingleOrDefaultAsync(u => u.Username == model.Username);
-            if (user == null || _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, model.Password) != PasswordVerificationResult.Success)
+            var user = await _context.Users.SingleOrDefaultAsync(u => u.Username == username);
+            if (user == null || !VerifyPassword(user, password))
             {
                 return null;
             }
+            return user;
+        }
 
-            var claims = new[]
+        // Регистрация нового пользователя
+        public async Task<User> RegisterUserAsync(UserRegisterModel registerModel)
+        {
+            // Проверка на существование пользователя с таким именем
+            var existingUser = await _context.Users.SingleOrDefaultAsync(u => u.Username == registerModel.Username);
+            if (existingUser != null)
             {
-            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new Claim(ClaimTypes.Name, user.Username),
-            new Claim(ClaimTypes.Role, user.Role)
-        };
+                throw new InvalidOperationException("User with this username already exists.");
+            }
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-            var token = new JwtSecurityToken(
-                issuer: _configuration["Jwt:Issuer"],
-                audience: _configuration["Jwt:Audience"],
-                claims: claims,
-                expires: DateTime.Now.AddMinutes(30),
-                signingCredentials: creds
-            );
-
-            return new JwtSecurityTokenHandler().WriteToken(token);
-        }
-
-        // Метод для отправки уведомления через RabbitMQ (например, о регистрации)
-        public async Task NotifyUserRegistered(string email)
-        {
-            var message = new { Email = email };
-            await _rabbitMqService.PublishMessageAsync(message, "UserRegisteredQueue");
-        }
-
-        public void StartListening()
-        {
-            ListenForUserRegistrationMessages();
-            ListenForUserLoginMessages();
-        }
-
-        // Обработка сообщений для регистрации пользователей
-        public void ListenForUserRegistrationMessages()
-        {
-            _rabbitMqService.ListenForMessages("UserRegistrationQueue", async (message) =>
+            // Создание нового пользователя
+            var newUser = new User
             {
-                var userRegisterModel = JsonConvert.DeserializeObject<UserRegisterModel>(message);
+                Username = registerModel.Username,
+                Email = registerModel.Email,
+                Role = registerModel.Role,
+                CreatedAt = DateTime.UtcNow
+            };
 
-                // Обработка регистрации пользователя
-                var result = await RegisterUserAsync(userRegisterModel);
-                if (result.Succeeded)
+            // Хэширование пароля
+            var passwordHasher = new PasswordHasher<User>();
+            newUser.PasswordHash = passwordHasher.HashPassword(newUser, registerModel.Password);
+
+            // Сохранение пользователя в базе
+            _context.Users.Add(newUser);
+            await _context.SaveChangesAsync();
+
+            // Создание профиля в зависимости от роли
+            if (registerModel.Role == "Freelancer")
+            {
+                var freelancerProfile = new FreelancerProfile
                 {
-                    // Отправляем уведомление об успешной регистрации в другую очередь
-                    await _rabbitMqService.PublishMessageAsync(new { Email = userRegisterModel.Email }, "UserRegisteredResponseQueue");
-                }
-            });
+                    UserId = newUser.Id,
+                    Skills = registerModel.Skills,
+                    Bio = registerModel.Bio
+                };
+                _context.FreelancerProfiles.Add(freelancerProfile);
+            }
+            else if (registerModel.Role == "Client")
+            {
+                var clientProfile = new ClientProfile
+                {
+                    UserId = newUser.Id,
+                    CompanyName = registerModel.CompanyName,
+                    Description = registerModel.Description
+                };
+                _context.ClientProfiles.Add(clientProfile);
+            }
+
+            // Сохранение изменений в базе
+            await _context.SaveChangesAsync();
+
+            return newUser;
         }
 
-        // Обработка сообщений для авторизации пользователей
-        public void ListenForUserLoginMessages()
+        // Метод для проверки пароля
+        private bool VerifyPassword(User user, string password)
         {
-            _rabbitMqService.ListenForMessages("UserLoginQueue", (message) =>
-            {
-                var userLoginModel = JsonConvert.DeserializeObject<UserLoginModel>(message);
-
-                // Логика аутентификации пользователя
-                var token = AuthenticateAsync(userLoginModel).Result;
-
-                // Отправляем результат аутентификации обратно в очередь
-                if (token != null)
-                {
-                    _rabbitMqService.PublishMessageAsync(new { Token = token }, "UserLoginResponseQueue");
-                }
-            });
+            var passwordHasher = new PasswordHasher<User>();
+            var result = passwordHasher.VerifyHashedPassword(user, user.PasswordHash, password);
+            return result == PasswordVerificationResult.Success;
         }
     }
 

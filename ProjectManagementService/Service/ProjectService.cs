@@ -93,6 +93,16 @@ namespace ProjectManagementService.Service
                         }
 
                         await transaction.CommitAsync(); // Коммитим транзакцию
+                        var successMessage = new
+                        {
+                            Action = "Create",
+                            Status = "Success",
+                            ProjectId = project.Id,
+                            CorrelationId = projectMessage.CorrelationId.ToString(),
+                            Message = "Проект успешно создан"
+                        };
+                        Console.WriteLine(projectMessage.CorrelationId.ToString());
+                        await _messageBus.PublishAsync("ProjectResponseQueue", JsonConvert.SerializeObject(successMessage));
                     }
                     catch (Exception ex)
                     {

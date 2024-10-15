@@ -21,14 +21,18 @@ builder.Services.AddSingleton<IConnection>(sp =>
     return factory.CreateConnection();
 });
 
-builder.Services.AddSingleton<RabbitMqService>();  // Сервис для RabbitMQ
-builder.Services.AddScoped<IUserService, UserService>();  // Сервис для пользователей
-builder.Services.AddScoped<IProfileService, ProfileService>();  // Сервис для профилей
+// Сервис для RabbitMQ
+builder.Services.AddSingleton<RabbitMqService>();
+
+// Регистрация сервисов для работы с пользователями и профилями
+builder.Services.AddScoped<IUserService, UserService>();  // Используйте интерфейс IUserService
+builder.Services.AddScoped<IProfileService, ProfileService>();
 
 // Настройка базы данных MySQL
 builder.Services.AddDbContext<UserDbContext>(options =>
-    options.UseMySql(builder.Configuration.GetConnectionString("DefaultConnection"),
-    new MySqlServerVersion(new Version(8, 0, 21))));
+    options.UseMySql(
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        new MySqlServerVersion(new Version(8, 0, 39))));
 
 // Настройка JWT аутентификации
 builder.Services.AddAuthentication(options =>
@@ -58,18 +62,25 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+/*
 
-// Запуск прослушивания очередей RabbitMQ
-var userService = app.Services.GetRequiredService<UserService>();
-userService.ListenForUserRegistrationMessages();
-userService.ListenForUserLoginMessages();
+// Запуск прослушивания RabbitMQ сообщений в фоне
+using (var scope = app.Services.CreateScope())
+{
+    var userService = scope.ServiceProvider.GetRequiredService<IUserService>();
 
-// Добавление миграций или создания базы данных
+    // Запуск подписки на сообщения RabbitMQ
+    Task.Run(() => userService.ListenForUserRegistrationMessages());
+    Task.Run(() => userService.ListenForUserLoginMessages());
+}
+*/
+
+// Применение миграций при запуске приложения
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<UserDbContext>();
 
-    // Применение миграций при запуске приложения
+    // Применение миграций
     dbContext.Database.Migrate();
 }
 
@@ -82,7 +93,7 @@ app.UseAuthorization();
 // Настройка маршрутов
 app.MapControllers();
 
-// Включение Swagger UI для тестирования API
+// Включение Swagger UI для тестирования API в режиме разработки
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -90,6 +101,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.Run();
+
 
 
 

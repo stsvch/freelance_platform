@@ -36,9 +36,8 @@ namespace WebApp.Controllers
             return View();
         }
 
-        // POST: /Project/Create
         [HttpPost("create")]
-        public IActionResult CreateProject([FromForm] ProjectModel project)
+        public async Task<IActionResult> CreateProject([FromForm] ProjectModel project)
         {
             var correlationId = Guid.NewGuid().ToString();
             var message = JsonConvert.SerializeObject(new
@@ -51,30 +50,29 @@ namespace WebApp.Controllers
                 FreelancerId = (int?)null,
                 CorrelationId = correlationId
             });
-
+            Console.WriteLine(correlationId);
             // Отправляем сообщение в очередь RabbitMQ
             _rabbitMqService.PublishMessage("ProjectQueue", message, correlationId);
 
-            // Ожидаем ответ от микросервиса
-            _rabbitMqService.ListenForMessages("ProjectResponseQueue", (responseMessage) =>
+            // Ожидаем ответ от микросервиса асинхронно
+            var responseMessage = await _rabbitMqService.WaitForMessageAsync("ProjectResponseQueue");
+            var response = JsonConvert.DeserializeObject<dynamic>(responseMessage);
+
+            if (response.Action == "Create" && response.CorrelationId == correlationId)
             {
-                var response = JsonConvert.DeserializeObject<dynamic>(responseMessage);
-                Console.WriteLine(response.ToString()); 
-                if (response.Action == "Create" && response.CorrelationId == correlationId)
+                if (response.Status == "Success")
                 {
-                    if (response.Status == "Success")
-                    {
-                        TempData["SuccessMessage"] = "Проект успешно создан!";
-                    }
-                    else
-                    {
-                        TempData["ErrorMessage"] = "Ошибка при создании проекта.";
-                    }
+                    TempData["SuccessMessage"] = "Проект успешно создан!";
                 }
-            });
+                else
+                {
+                    TempData["ErrorMessage"] = "Ошибка при создании проекта.";
+                }
+            }
 
             return RedirectToAction("Create");
         }
+
 
         // POST: /Project/Update
         [HttpPost("update/{id}")]

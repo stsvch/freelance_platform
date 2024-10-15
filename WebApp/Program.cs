@@ -2,6 +2,16 @@ using RabbitMQ.Client;
 using WebApp.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddHttpClient();
+
+// Включаем сессии
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30); // Время жизни сессии
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true; // Сессия будет работать даже с блокировщиками куков
+});
 
 // Настройки RabbitMQ с использованием IConfiguration
 builder.Services.AddSingleton<IConnection>(sp =>

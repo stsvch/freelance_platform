@@ -6,48 +6,46 @@ using UserMenegementService.Service;
 
 namespace UserMenegementService.Controllers
 {
-
-    [Route("api/[controller]")]
     [ApiController]
+    [Route("api/auth")]
     public class AuthController : ControllerBase
     {
         private readonly IUserService _userService;
-        private readonly RabbitMqService _rabbitMqService;
+        private readonly IJwtService _jwtService;
 
-        public AuthController(IUserService userService, RabbitMqService rabbitMqService)
+        public AuthController(IUserService userService, IJwtService jwtService)
         {
             _userService = userService;
-            _rabbitMqService = rabbitMqService;
-        }
-
-        [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] UserRegisterModel model)
-        {
-            var result = await _userService.RegisterUserAsync(model);
-            if (!result.Succeeded)
-            {
-                return BadRequest(result.Errors);
-            }
-
-            // Отправляем сообщение в очередь RabbitMQ
-            await _rabbitMqService.PublishMessageAsync(new { Email = model.Email }, "UserRegisteredQueue");
-
-            return Ok("User registered successfully.");
+            _jwtService = jwtService;
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] UserLoginModel model)
+        public async Task<IActionResult> Login([FromBody] UserLoginModel loginModel)
         {
-            var token = await _userService.AuthenticateAsync(model);
-            if (token == null)
+            var user = await _userService.AuthenticateUserAsync(loginModel.Username, loginModel.Password);
+            if (user == null)
             {
-                return Unauthorized("Invalid credentials.");
+                return Unauthorized(new { Message = "Invalid username or password" });
             }
 
-            // Отправляем запрос на аутентификацию в RabbitMQ
-            await _rabbitMqService.PublishMessageAsync(new { Username = model.Username }, "UserLoginQueue");
+            var token = _jwtService.GenerateToken(user);
+            return Ok(new { UserId = user.Id, Username = user.Username, Token = token });
+        }
 
-            return Ok(new { Token = token });
+        [HttpPost("register")]
+        public async Task<IActionResult> Register([FromBody] UserRegisterModel registerModel)
+        {
+            try
+            {
+                var user = await _userService.RegisterUserAsync(registerModel);
+                var token = _jwtService.GenerateToken(user);
+
+                return Ok(new { UserId = user.Id, Username = user.Username, Token = token });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { Message = ex.Message });
+            }
         }
     }
 
