@@ -4,8 +4,8 @@ using UserMenegementService.Service;
 
 namespace UserMenegementService.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
+    [Route("api/[controller]")]
     public class UserProfileController : ControllerBase
     {
         private readonly IProfileService _profileService;
@@ -26,11 +26,44 @@ namespace UserMenegementService.Controllers
             return Ok(profile);
         }
 
-        [HttpPost("freelancer")]
-        public async Task<IActionResult> CreateFreelancerProfile([FromBody] FreelancerProfile profile)
+        [HttpGet("client/{userId}")]
+        public async Task<IActionResult> GetClientProfile(int userId)
         {
-            await _profileService.CreateFreelancerProfileAsync(profile);
-            return CreatedAtAction(nameof(GetFreelancerProfile), new { userId = profile.UserId }, profile);
+            var profile = await _profileService.GetFreelancerProfileAsync(userId);
+            if (profile == null)
+            {
+                return NotFound("Client profile not found.");
+            }
+            return Ok(profile);
         }
+
+        [HttpPost("freelancers")]
+        public async Task<IActionResult> GetFreelancers([FromBody] User model)
+        {
+            try
+            {
+                var freelancers = await _profileService.GetAllFreelancersExceptAsync(model.Id);
+                return Ok(freelancers);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { Message = ex.Message });
+            }
+        }
+
+        [HttpPost("clients")]
+        public async Task<IActionResult> GetClients([FromBody] User model)
+        {
+            try
+            {
+                var clients = await _profileService.GetAllClientsExceptAsync(model.Id);
+                return Ok(clients);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { Message = ex.Message });
+            }
+        }
+
     }
 }

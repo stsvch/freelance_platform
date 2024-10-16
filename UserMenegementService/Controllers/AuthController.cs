@@ -22,14 +22,14 @@ namespace UserMenegementService.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] UserLoginModel loginModel)
         {
-            var user = await _userService.AuthenticateUserAsync(loginModel.Username, loginModel.Password);
+            var user = await _userService.AuthenticateUserAsync(loginModel.Username, loginModel.PasswordHash);
             if (user == null)
             {
                 return Unauthorized(new { Message = "Invalid username or password" });
             }
 
             var token = _jwtService.GenerateToken(user);
-            return Ok(new { UserId = user.Id, Username = user.Username, Token = token });
+            return Ok(new { UserId = user.Id, Username = user.Username, Token = token, Role = user.Role });
         }
 
         [HttpPost("register")]
@@ -40,13 +40,14 @@ namespace UserMenegementService.Controllers
                 var user = await _userService.RegisterUserAsync(registerModel);
                 var token = _jwtService.GenerateToken(user);
 
-                return Ok(new { UserId = user.Id, Username = user.Username, Token = token });
+                return Ok(new { UserId = user.Id, Username = user.Username, Token = token, Role = user.Role });
             }
             catch (InvalidOperationException ex)
             {
                 return BadRequest(new { Message = ex.Message });
             }
         }
+
     }
 
 }

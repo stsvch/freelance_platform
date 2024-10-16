@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using System.Data;
 using System.Text;
 using WebApp.Models;
 using WebApp.Services;
@@ -30,40 +31,29 @@ namespace WebApp.Controllers
             {
                 Action = "Login",
                 Username = model.Username,
-                Password = model.Password, // Пароль передаем без хеширования
+                PasswordHash = model.PasswordHash, // Пароль передаем без хеширования
             });
 
             var client = _httpClientFactory.CreateClient();
 
-            // Создаем контент запроса
             var content = new StringContent(message, Encoding.UTF8, "application/json");
 
-            // Отправляем POST-запрос к микросервису
             var response = await client.PostAsync("https://localhost:7145/api/auth/login", content);
 
-            // Проверяем успешность ответа
             if (response.IsSuccessStatusCode)
             {
-                // Читаем содержимое ответа (например, JSON с ID пользователя)
                 var contentResponse = await response.Content.ReadAsStringAsync();
 
-                // Десериализуем ответ, предполагая, что там содержится ID пользователя
                 var responseData = JsonConvert.DeserializeObject<dynamic>(contentResponse);
 
-                // Извлекаем ID пользователя из ответа
                 string userId = responseData?.UserId?.ToString();
+                string role = responseData?.Role?.ToString();
 
                 if (!string.IsNullOrEmpty(userId))
                 {
                     // Сохраняем ID пользователя в сессии
                     HttpContext.Session.SetString("UserId", userId);
-
-                    // Либо можем сохранить ID в куках (на 1 час)
-                    CookieOptions cookieOptions = new CookieOptions
-                    {
-                        Expires = DateTime.UtcNow.AddHours(1)
-                    };
-                    HttpContext.Response.Cookies.Append("UserId", userId, cookieOptions);
+                    HttpContext.Session.SetString("Role", role);
                 }
 
                 return Ok(new { Message = "Login successful", UserId = userId });
@@ -86,7 +76,7 @@ namespace WebApp.Controllers
         public async Task<IActionResult> Register([FromForm] UserRegisterModel model)
         {
             var passwordHasher = new PasswordHasher<UserRegisterModel>();
-            var hashedPassword = passwordHasher.HashPassword(model, model.Password);
+            var hashedPassword = passwordHasher.HashPassword(model, model.PasswordHash);
 
             var message = JsonConvert.SerializeObject(new
             {
@@ -99,38 +89,27 @@ namespace WebApp.Controllers
 
             var client = _httpClientFactory.CreateClient();
 
-            // Создаем контент запроса
-            var content = new StringContent(message, Encoding.UTF8, "application/json");
 
-            // Отправляем POST-запрос к микросервису
+            var content = new StringContent(message, Encoding.UTF8, "application/json");
             var response = await client.PostAsync("https://localhost:7145/api/auth/register", content);
 
-            // Проверяем успешность ответа
             if (response.IsSuccessStatusCode)
             {
-                // Читаем содержимое ответа (например, JSON с ID пользователя)
                 var contentResponse = await response.Content.ReadAsStringAsync();
 
-                // Десериализуем ответ, предполагая, что там содержится ID пользователя
                 var responseData = JsonConvert.DeserializeObject<dynamic>(contentResponse);
 
                 // Извлекаем ID пользователя из ответа
                 string userId = responseData?.UserId?.ToString();
-
+                string role = responseData?.Role?.ToString();
                 if (!string.IsNullOrEmpty(userId))
                 {
                     // Сохраняем ID пользователя в сессии
                     HttpContext.Session.SetString("UserId", userId);
-
-                    // Либо можем сохранить ID в куках (на 1 час)
-                    CookieOptions cookieOptions = new CookieOptions
-                    {
-                        Expires = DateTime.UtcNow.AddHours(1)
-                    };
-                    HttpContext.Response.Cookies.Append("UserId", userId, cookieOptions);
+                    HttpContext.Session.SetString("Role", role);
                 }
 
-                return Ok(new { Message = "Login successful", UserId = userId });
+                return Ok(new { Message = "register successful", UserId = userId });
             }
             else
             {

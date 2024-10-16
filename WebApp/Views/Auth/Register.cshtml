@@ -1,4 +1,5 @@
 ﻿@model UserRegisterModel
+
 <div class="container">
     <h2>Регистрация</h2>
     <form asp-action="Register" method="post">
@@ -16,12 +17,59 @@
         </div>
         <div class="mb-3">
             <label for="role" class="form-label">Роль</label>
-            <select class="form-select" asp-for="Role">
+            <select class="form-select" id="role" asp-for="Role" onchange="toggleFields()">
                 <option value="Freelancer">Фрилансер</option>
                 <option value="Client">Заказчик</option>
             </select>
         </div>
+
+        <!-- Поля для фрилансера -->
+        <div id="freelancerFields" style="display:none;">
+            <div class="mb-3">
+                <label for="skills" class="form-label">Навыки</label>
+                <input type="text" class="form-control" id="skills" asp-for="Skills">
+            </div>
+            <div class="mb-3">
+                <label for="bio" class="form-label">О себе</label>
+                <textarea class="form-control" id="bio" asp-for="Bio"></textarea>
+            </div>
+        </div>
+
+        <!-- Поля для клиента -->
+        <div id="clientFields" style="display:none;">
+            <div class="mb-3">
+                <label for="companyName" class="form-label">Название компании</label>
+                <input type="text" class="form-control" id="companyName" asp-for="CompanyName">
+            </div>
+            <div class="mb-3">
+                <label for="description" class="form-label">Описание</label>
+                <textarea class="form-control" id="description" asp-for="Description"></textarea>
+            </div>
+        </div>
+
         <button type="submit" class="btn btn-primary">Зарегистрироваться</button>
     </form>
 </div>
+
+<script>
+    function toggleFields() {
+        var role = document.getElementById("role").value;
+        var freelancerFields = document.getElementById("freelancerFields");
+        var clientFields = document.getElementById("clientFields");
+
+        if (role === "Freelancer") {
+            freelancerFields.style.display = "block";
+            clientFields.style.display = "none";
+        } else if (role === "Client") {
+            freelancerFields.style.display = "none";
+            clientFields.style.display = "block";
+        }
+    }
+
+    // Для того, чтобы поля корректно отображались при загрузке формы
+    document.addEventListener("DOMContentLoaded", function() {
+        toggleFields();
+    });
+</script>
+
 

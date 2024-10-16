@@ -24,7 +24,6 @@ namespace UserMenegementService.Service
             _context = context;
         }
 
-        // Аутентификация пользователя
         public async Task<User> AuthenticateUserAsync(string username, string password)
         {
             var user = await _context.Users.SingleOrDefaultAsync(u => u.Username == username);
@@ -35,34 +34,26 @@ namespace UserMenegementService.Service
             return user;
         }
 
-        // Регистрация нового пользователя
         public async Task<User> RegisterUserAsync(UserRegisterModel registerModel)
         {
-            // Проверка на существование пользователя с таким именем
             var existingUser = await _context.Users.SingleOrDefaultAsync(u => u.Username == registerModel.Username);
             if (existingUser != null)
             {
                 throw new InvalidOperationException("User with this username already exists.");
             }
 
-            // Создание нового пользователя
             var newUser = new User
             {
                 Username = registerModel.Username,
                 Email = registerModel.Email,
                 Role = registerModel.Role,
+                PasswordHash = registerModel.PasswordHash,
                 CreatedAt = DateTime.UtcNow
             };
 
-            // Хэширование пароля
-            var passwordHasher = new PasswordHasher<User>();
-            newUser.PasswordHash = passwordHasher.HashPassword(newUser, registerModel.Password);
-
-            // Сохранение пользователя в базе
             _context.Users.Add(newUser);
             await _context.SaveChangesAsync();
 
-            // Создание профиля в зависимости от роли
             if (registerModel.Role == "Freelancer")
             {
                 var freelancerProfile = new FreelancerProfile
@@ -84,18 +75,15 @@ namespace UserMenegementService.Service
                 _context.ClientProfiles.Add(clientProfile);
             }
 
-            // Сохранение изменений в базе
             await _context.SaveChangesAsync();
 
             return newUser;
         }
 
-        // Метод для проверки пароля
         private bool VerifyPassword(User user, string password)
         {
-            var passwordHasher = new PasswordHasher<User>();
-            var result = passwordHasher.VerifyHashedPassword(user, user.PasswordHash, password);
-            return result == PasswordVerificationResult.Success;
+            var userPassword = user.PasswordHash;
+            return userPassword == password;
         }
     }
 
