@@ -1,5 +1,65 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
-}
+﻿@using WebApp.Models
+@model object
+
+<div class="container mt-4">
+    <h2 class="mb-4">Профиль пользователя</h2>
+
+    @if (Model != null)
+    {
+        <div class="profile-card">
+            @if (Model is FreelancerProfile freelancerProfile)
+            {
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h4>Профиль фрилансера</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Имя:</strong> @freelancerProfile.User?.Username</p>
+                                <p><strong>Email:</strong> @freelancerProfile.User?.Email</p>
+                                <p><strong>Дата регистрации:</strong> @freelancerProfile.User?.CreatedAt?.ToString("dd/MM/yyyy")</p>
+                                <p><strong>Роль:</strong> @freelancerProfile.User?.Role</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>О себе:</strong> @freelancerProfile.Bio</p>
+                                <p><strong>Навыки:</strong> @freelancerProfile.Skills</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+            else if (Model is ClientProfile clientProfile)
+            {
+                <div class="card mb-4">
+                    <div class="card-header bg-success text-white">
+                        <h4>Профиль клиента</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Имя:</strong> @clientProfile.User?.Username</p>
+                                <p><strong>Email:</strong> @clientProfile.User?.Email</p>
+                                <p><strong>Дата регистрации:</strong> @clientProfile.User?.CreatedAt?.ToString("dd/MM/yyyy")</p>
+                                <p><strong>Роль:</strong> @clientProfile.User?.Role</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Название компании:</strong> @clientProfile.CompanyName</p>
+                                <p><strong>Описание:</strong> @clientProfile.Description</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-danger">
+            <p>@ViewBag.ErrorMessage</p>
+        </div>
+    }
+</div>
+
+
+

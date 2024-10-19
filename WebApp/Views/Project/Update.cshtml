@@ -1,5 +1,36 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
-}
+﻿@model ProjectModel
+
+<div class="container">
+    <h2>Изменить проект</h2>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["ErrorMessage"]
+        </div>
+    }
+
+    <form asp-action="UpdateProject" method="post">
+        <div class="mb-3">
+            <label for="title" class="form-label">Название проекта</label>
+            <input type="text" class="form-control" id="title" asp-for="Title" value="@Model.Title">
+        </div>
+        <div class="mb-3">
+            <label for="description" class="form-label">Описание проекта</label>
+            <textarea class="form-control" id="description" asp-for="Description">@Model.Description</textarea>
+        </div>
+        <div class="mb-3">
+            <label for="budget" class="form-label">Бюджет</label>
+            <input type="number" class="form-control" id="budget" asp-for="Budget" value="@Model.Budget">
+        </div>
+        <input type="hidden" asp-for="Id" />
+        <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+        <a href="@Url.Action("Index")" class="btn btn-secondary">Отмена</a>
+    </form>
+</div>

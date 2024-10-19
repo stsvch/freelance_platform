@@ -1,54 +1,75 @@
-﻿@model UserRegisterModel
+﻿@model WebApp.Models.UserRegister
 
-<div class="container">
-    <h2>Регистрация</h2>
-    <form asp-action="Register" method="post">
-        <div class="mb-3">
-            <label for="username" class="form-label">Имя пользователя</label>
-            <input type="text" class="form-control" id="username" asp-for="Username">
-        </div>
-        <div class="mb-3">
-            <label for="email" class="form-label">Электронная почта</label>
-            <input type="email" class="form-control" id="email" asp-for="Email">
-        </div>
-        <div class="mb-3">
-            <label for="password" class="form-label">Пароль</label>
-            <input type="password" class="form-control" id="password" asp-for="Password">
-        </div>
-        <div class="mb-3">
-            <label for="role" class="form-label">Роль</label>
-            <select class="form-select" id="role" asp-for="Role" onchange="toggleFields()">
-                <option value="Freelancer">Фрилансер</option>
-                <option value="Client">Заказчик</option>
-            </select>
-        </div>
+<div class="container mt-5">
+    <div class="card mx-auto" style="max-width: 400px;">
+        <div class="card-body">
+            <h3 class="text-center mb-4">Регистрация</h3>
 
-        <!-- Поля для фрилансера -->
-        <div id="freelancerFields" style="display:none;">
-            <div class="mb-3">
-                <label for="skills" class="form-label">Навыки</label>
-                <input type="text" class="form-control" id="skills" asp-for="Skills">
-            </div>
-            <div class="mb-3">
-                <label for="bio" class="form-label">О себе</label>
-                <textarea class="form-control" id="bio" asp-for="Bio"></textarea>
-            </div>
-        </div>
+            <form asp-action="Register" method="post">
+                <div class="mb-3">
+                    <label for="username" class="form-label">Имя пользователя</label>
+                    <input type="text" class="form-control" id="username" name="Username" asp-for="Username" required />
+                    <span asp-validation-for="Username" class="text-danger"></span>
+                </div>
 
-        <!-- Поля для клиента -->
-        <div id="clientFields" style="display:none;">
-            <div class="mb-3">
-                <label for="companyName" class="form-label">Название компании</label>
-                <input type="text" class="form-control" id="companyName" asp-for="CompanyName">
-            </div>
-            <div class="mb-3">
-                <label for="description" class="form-label">Описание</label>
-                <textarea class="form-control" id="description" asp-for="Description"></textarea>
-            </div>
-        </div>
+                <div class="mb-3">
+                    <label for="email" class="form-label">Электронная почта</label>
+                    <input type="email" class="form-control" id="email" name="Email" asp-for="Email" required />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
 
-        <button type="submit" class="btn btn-primary">Зарегистрироваться</button>
-    </form>
+                <div class="mb-3">
+                    <label for="password" class="form-label">Пароль</label>
+                    <input type="password" class="form-control" id="password" name="PasswordHash" asp-for="PasswordHash" required />
+                    <span asp-validation-for="PasswordHash" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label for="role" class="form-label">Роль</label>
+                    <select class="form-select" id="role" name="Role" asp-for="Role" onchange="toggleFields()" required>
+                        <option value="">Выберите роль</option>
+                        <option value="Freelancer">Фрилансер</option>
+                        <option value="Client">Заказчик</option>
+                    </select>
+                    <span asp-validation-for="Role" class="text-danger"></span>
+                </div>
+
+                <!-- Поля для фрилансера -->
+                <div id="freelancerFields" style="display:none;">
+                    <div class="mb-3">
+                        <label for="skills" class="form-label">Навыки</label>
+                        <input type="text" class="form-control" id="skills" name="Skills" asp-for="Skills" />
+                        <span asp-validation-for="Skills" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="bio" class="form-label">О себе</label>
+                        <textarea class="form-control" id="bio" name="Bio" asp-for="Bio"></textarea>
+                        <span asp-validation-for="Bio" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <!-- Поля для клиента -->
+                <div id="clientFields" style="display:none;">
+                    <div class="mb-3">
+                        <label for="companyName" class="form-label">Название компании</label>
+                        <input type="text" class="form-control" id="companyName" name="CompanyName" asp-for="CompanyName" />
+                        <span asp-validation-for="CompanyName" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Описание</label>
+                        <textarea class="form-control" id="description" name="Description" asp-for="Description"></textarea>
+                        <span asp-validation-for="Description" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-success">Зарегистрироваться</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -63,13 +84,18 @@
         } else if (role === "Client") {
             freelancerFields.style.display = "none";
             clientFields.style.display = "block";
+        } else {
+            freelancerFields.style.display = "none";
+            clientFields.style.display = "none";
         }
     }
 
-    // Для того, чтобы поля корректно отображались при загрузке формы
-    document.addEventListener("DOMContentLoaded", function() {
+    // Обновление отображения полей при загрузке страницы
+    document.addEventListener("DOMContentLoaded", function () {
         toggleFields();
     });
 </script>
+
+
 
 

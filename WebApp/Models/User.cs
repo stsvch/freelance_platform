@@ -1,6 +1,6 @@
 ﻿namespace WebApp.Models
 {
-    public class UserRegisterModel
+    public class UserRegister
     {
         public string Username { get; set; }
         public string PasswordHash { get; set; }
@@ -13,26 +13,26 @@
     }
 
 
-    public class UserLoginModel
+    public class UserLogin
     {
-        public string Username { get; set; }
+        public string Email { get; set; }
         public string PasswordHash { get; set; }
     }
 
-    public class FreelancerProfileModel
+    public class User
     {
-        public string Skills { get; set; }
-        public string Bio { get; set; }
-        public List<ProjectModel> CurrentProjects { get; set; } = new List<ProjectModel>();
-        public List<ProjectModel> CompletedProjects { get; set; } = new List<ProjectModel>();
-    }
+        public int Id { get; set; }
+        public string Username { get; set; }
+        public string PasswordHash { get; set; }
+        public string Email { get; set; }
+        public DateTime? CreatedAt { get; set; }
+        public string Role { get; set; }
 
-    public class ClientProfileModel
-    {
-        public string CompanyName { get; set; }
-        public string Description { get; set; }
-        public List<ProjectModel> CreatedProjects { get; set; } = new List<ProjectModel>();
-    }
+        // Связь с профилем фрилансера (nullable)
+        public FreelancerProfile? FreelancerProfile { get; set; }
 
+        // Связь с профилем клиента (nullable)
+        public ClientProfile? ClientProfile { get; set; }
+    }
 
 }

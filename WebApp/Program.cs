@@ -3,7 +3,7 @@ using WebApp.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddHttpClient();
-
+builder.Services.AddScoped<RoleFilter>();
 // Включаем сессии
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
@@ -33,12 +33,20 @@ builder.Services.AddSingleton<IModel>(sp =>
     return connection.CreateModel();
 });
 
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30); // Время жизни сессии
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
 // Настроим RabbitMqService для работы с RabbitMQ
 builder.Services.AddSingleton<RabbitMqService>();
 
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
+
+app.UseSession();
 
 app.UseHttpsRedirection();
 app.UseRouting();

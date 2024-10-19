@@ -24,19 +24,24 @@ namespace UserMenegementService.Service
 
         public async Task<FreelancerProfile> GetFreelancerProfileAsync(int userId)
         {
-            return await context.FreelancerProfiles.FirstOrDefaultAsync(fp => fp.UserId == userId);
+            return await context.FreelancerProfiles
+                     .Include(fp => fp.User) 
+                     .FirstOrDefaultAsync(fp => fp.UserId == userId);
         }
 
 
         public async Task<ClientProfile> GetClientProfileAsync(int userId)
         {
-            return await context.ClientProfiles.FirstOrDefaultAsync(c => c.UserId == userId);
+            return await context.ClientProfiles
+                     .Include(fp => fp.User) 
+                     .FirstOrDefaultAsync(fp => fp.UserId == userId);
         }
 
         public async Task<List<FreelancerProfile>> GetAllFreelancersExceptAsync(int userId)
         {
             return await context.FreelancerProfiles
                                  .Where(f => f.UserId != userId)
+                                 .Include(f => f.User)
                                  .ToListAsync();
         }
 
@@ -44,6 +49,7 @@ namespace UserMenegementService.Service
         {
             return await context.ClientProfiles
                                  .Where(c => c.UserId != userId)
+                                 .Include(с => с.User)
                                  .ToListAsync();
         }
     }

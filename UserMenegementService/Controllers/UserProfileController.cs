@@ -5,7 +5,7 @@ using UserMenegementService.Service;
 namespace UserMenegementService.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/profile")]
     public class UserProfileController : ControllerBase
     {
         private readonly IProfileService _profileService;
@@ -29,7 +29,7 @@ namespace UserMenegementService.Controllers
         [HttpGet("client/{userId}")]
         public async Task<IActionResult> GetClientProfile(int userId)
         {
-            var profile = await _profileService.GetFreelancerProfileAsync(userId);
+            var profile = await _profileService.GetClientProfileAsync(userId);
             if (profile == null)
             {
                 return NotFound("Client profile not found.");
@@ -37,19 +37,21 @@ namespace UserMenegementService.Controllers
             return Ok(profile);
         }
 
-        [HttpPost("freelancers")]
-        public async Task<IActionResult> GetFreelancers([FromBody] User model)
+        [HttpGet("freelancers")]
+        public async Task<IActionResult> GetFreelancers([FromQuery] string userId)
         {
             try
             {
-                var freelancers = await _profileService.GetAllFreelancersExceptAsync(model.Id);
-                return Ok(freelancers);
+                // Получаем список всех фрилансеров, кроме текущего пользователя
+                var freelancers = await _profileService.GetAllFreelancersExceptAsync(int.Parse(userId));
+                return Ok(freelancers);  // Возвращаем список фрилансеров
             }
             catch (InvalidOperationException ex)
             {
                 return BadRequest(new { Message = ex.Message });
             }
         }
+
 
         [HttpPost("clients")]
         public async Task<IActionResult> GetClients([FromBody] User model)

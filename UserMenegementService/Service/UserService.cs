@@ -13,7 +13,7 @@ namespace UserMenegementService.Service
     public interface IUserService
     {
         Task<User> AuthenticateUserAsync(string username, string password);
-        Task<User> RegisterUserAsync(UserRegisterModel registerModel);
+        Task<User> RegisterUserAsync(UserRegister registerModel);
     }
     public class UserService : IUserService
     {
@@ -24,9 +24,9 @@ namespace UserMenegementService.Service
             _context = context;
         }
 
-        public async Task<User> AuthenticateUserAsync(string username, string password)
+        public async Task<User> AuthenticateUserAsync(string email, string password)
         {
-            var user = await _context.Users.SingleOrDefaultAsync(u => u.Username == username);
+            var user = await _context.Users.SingleOrDefaultAsync(u => u.Email == email);
             if (user == null || !VerifyPassword(user, password))
             {
                 return null;
@@ -34,9 +34,9 @@ namespace UserMenegementService.Service
             return user;
         }
 
-        public async Task<User> RegisterUserAsync(UserRegisterModel registerModel)
+        public async Task<User> RegisterUserAsync(UserRegister registerModel)
         {
-            var existingUser = await _context.Users.SingleOrDefaultAsync(u => u.Username == registerModel.Username);
+            var existingUser = await _context.Users.SingleOrDefaultAsync(u => u.Email == registerModel.Email);
             if (existingUser != null)
             {
                 throw new InvalidOperationException("User with this username already exists.");

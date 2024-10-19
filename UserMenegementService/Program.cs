@@ -60,6 +60,7 @@ builder.Services.AddControllers();
 // Настройка Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddScoped<IJwtService, JwtService>();
 
 var app = builder.Build();
 /*

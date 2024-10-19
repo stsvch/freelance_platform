@@ -1,0 +1,34 @@
+﻿@using WebApp.Models
+@model List<ClientProfile>
+
+<div class="container mt-4">
+    <h2 class="mb-4">Список клиентов</h2>
+
+    <div id="clientsList">
+        @if (Model != null && Model.Count > 0)
+        {
+            <div class="list-group">
+                @foreach (var client in Model)
+                {
+                    <div class="list-group-item">
+                        <h5 class="mb-1">@client.User?.Username</h5>
+                        <p><strong>Email:</strong> @client.User?.Email</p>
+                        <p><strong>Компания:</strong> @client.CompanyName</p>
+                        <p><strong>Описание:</strong> @client.Description</p>
+                        <a href="@Url.Action("Client", "Profile", new { id = client.User?.Id })" class="btn btn-primary">
+                            Посмотреть профиль
+                        </a>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-warning">
+                Нет доступных клиентов.
+            </div>
+        }
+    </div>
+</div>
+
+

@@ -1,6 +1,6 @@
 ﻿namespace UserMenegementService.Model
 {
-    public class UserRegisterModel
+    public class UserRegister
     {
         public string Username { get; set; }
         public string PasswordHash { get; set; }

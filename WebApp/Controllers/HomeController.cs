@@ -1,9 +1,10 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using WebApp.Models;
+using WebApp.Services;
 
 namespace WebApp.Controllers;
-
+[ServiceFilter(typeof(RoleFilter))]
 public class HomeController : Controller
 {
     private readonly ILogger<HomeController> _logger;
@@ -15,7 +16,7 @@ public class HomeController : Controller
 
     public IActionResult Index()
     {
-        return View();
+        return RedirectToAction("Login", "Auth");
     }
 
     public IActionResult Privacy()

@@ -1,0 +1,37 @@
+﻿@using WebApp.Models
+@model List<FreelancerProfile>
+
+<div class="container mt-4">
+    <h2 class="mb-4">Список фрилансеров</h2>
+
+    <div id="freelancersList">
+        @if (Model != null && Model.Count > 0)
+        {
+            <div class="list-group">
+                @foreach (var freelancer in Model)
+                {
+                    <div class="list-group-item">
+                        <h5 class="mb-1">@freelancer.User?.Username</h5>
+                        <p><strong>Email:</strong> @freelancer.User?.Email</p>
+                        <p><strong>О себе:</strong> @freelancer.Bio</p>
+                        <p><strong>Навыки:</strong> @freelancer.Skills</p>
+                        <a href="@Url.Action("Freelancer", "Profile", new { id = freelancer.User?.Id })" class="btn btn-primary">
+                            Посмотреть профиль
+                        </a>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-warning">
+                Нет доступных фрилансеров.
+            </div>
+        }
+    </div>
+</div>
+
+
+
+
+

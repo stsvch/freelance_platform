@@ -51,9 +51,225 @@ namespace ProjectManagementService.Service
                 case "Delete":
                     await DeleteProjectAsync(projectMessage);
                     break;
+                case "Get":
+                    await GetProjectAsync(projectMessage);
+                    break;
+                case "GetAllClient":
+                    await GetProjectsByClientIdAsync(projectMessage);
+                    break;
+                case "GetAllFreelancer":
+                    await GetProjectsByFreelancerIdAsync(projectMessage);
+                    break;
                 default:
                     Console.WriteLine($"Неизвестное действие: {action}");
                     break;
+            }
+        }
+
+        public async Task GetProjectsByFreelancerIdAsync(dynamic projectMessage)
+        {
+            using (var scope = _serviceProvider.CreateScope())
+            {
+                var context = scope.ServiceProvider.GetRequiredService<ProjectDbContext>();
+
+                using (var transaction = await context.Database.BeginTransactionAsync())
+                {
+                    try
+                    {
+                        int freelancerId = projectMessage.FreelancerId;
+                        var projects = await context.Projects
+                                                    .Where(p => p.FreelancerId == freelancerId)
+                                                    .ToListAsync();
+
+                        if (projects.Any())
+                        {
+                            var successMessage = new
+                            {
+                                Action = "GetAllFreelancert",
+                                Status = "Success",
+                                CorrelationId = projectMessage.CorrelationId,
+                                Projects = projects.Select(project => new
+                                {
+                                    project.Id,
+                                    project.Title,
+                                    project.Description,
+                                    project.Budget,
+                                    project.ClientId,
+                                    project.FreelancerId,
+                                    project.CreatedAt,
+                                    project.UpdatedAt
+                                }).ToList()
+                            };
+
+                            await _messageBus.PublishAsync("ProjectResponseQueue", JsonConvert.SerializeObject(successMessage));
+                        }
+                        else
+                        {
+                            var errorMessage = new
+                            {
+                                Action = "GetAllFreelancer",
+                                Status = "Error",
+                                CorrelationId = projectMessage.CorrelationId.ToString(),
+                                Message = "Проекты не найдены"
+                            };
+                            await _messageBus.PublishAsync("ProjectResponseQueue", JsonConvert.SerializeObject(errorMessage));
+                        }
+
+                        await transaction.CommitAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        var errorMessage = new
+                        {
+                            Action = "GetAllFreelancer",
+                            Status = "Error",
+                            CorrelationId = projectMessage.CorrelationId.ToString(),
+                            Message = ex.Message
+                        };
+
+                        await _messageBus.PublishAsync("ProjectResponseQueue", JsonConvert.SerializeObject(errorMessage));
+                        await transaction.RollbackAsync();
+                    }
+                }
+            }
+        }
+
+        public async Task GetProjectsByClientIdAsync(dynamic projectMessage)
+        {
+            using (var scope = _serviceProvider.CreateScope())
+            {
+                var context = scope.ServiceProvider.GetRequiredService<ProjectDbContext>();
+
+                using (var transaction = await context.Database.BeginTransactionAsync())
+                {
+                    try
+                    {
+                        int clientId = projectMessage.ClientId;
+                        var projects = await context.Projects
+                                                    .Where(p => p.ClientId == clientId)
+                                                    .ToListAsync();
+
+                        if (projects.Any())
+                        {
+                            // Формируем успешное сообщение с проектами
+                            var successMessage = new
+                            {
+                                Action = "GetAllClient",
+                                Status = "Success",
+                                CorrelationId = projectMessage.CorrelationId,
+                                Projects = projects.Select(project => new
+                                {
+                                    project.Id,
+                                    project.Title,
+                                    project.Description,
+                                    project.Budget,
+                                    project.ClientId,
+                                    project.FreelancerId,
+                                    project.CreatedAt,
+                                    project.UpdatedAt
+                                }).ToList() 
+                            };
+
+                            await _messageBus.PublishAsync("ProjectResponseQueue", JsonConvert.SerializeObject(successMessage));
+                        }
+                        else
+                        {
+                            var errorMessage = new
+                            {
+                                Action = "GetAllClient",
+                                Status = "Error",
+                                CorrelationId = projectMessage.CorrelationId.ToString(),
+                                Message = "Проекты не найдены для данного ClientId"
+                            };
+                            await _messageBus.PublishAsync("ProjectResponseQueue", JsonConvert.SerializeObject(errorMessage));
+                        }
+
+                        await transaction.CommitAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        var errorMessage = new
+                        {
+                            Action = "GetAllClient",
+                            Status = "Error",
+                            CorrelationId = projectMessage.CorrelationId.ToString(),
+                            Message = ex.Message
+                        };
+
+                        await _messageBus.PublishAsync("ProjectResponseQueue", JsonConvert.SerializeObject(errorMessage));
+                        await transaction.RollbackAsync();
+                    }
+                }
+            }
+        }
+
+
+        public async Task GetProjectAsync(dynamic projectMessage)
+        {
+            using (var scope = _serviceProvider.CreateScope())
+            {
+                var context = scope.ServiceProvider.GetRequiredService<ProjectDbContext>();
+
+                using (var transaction = await context.Database.BeginTransactionAsync())
+                {
+                    try
+                    {
+                        int projectId = projectMessage.ProjectId;
+
+                        var project = await context.Projects
+                                                   .Where(p => p.Id == projectId)
+                                                   .FirstOrDefaultAsync();
+
+                        if (project != null)
+                        {
+                            var successMessage = new
+                            {
+                                Action = "Get",
+                                Status = "Success",
+                                CorrelationId = projectMessage.CorrelationId,
+                                Project = new
+                                {
+                                    project.Id,
+                                    project.Title,
+                                    project.Description,
+                                    project.Budget,
+                                    project.ClientId,
+                                    project.FreelancerId,
+                                    project.CreatedAt,
+                                    project.UpdatedAt
+                                }
+                            };
+
+                            await _messageBus.PublishAsync("ProjectResponseQueue", JsonConvert.SerializeObject(successMessage));
+                        }
+                        else
+                        {
+                            var errorMessage = new
+                            {
+                                Action = "Get",
+                                Status = "Error",
+                                CorrelationId = projectMessage.CorrelationId.ToString(),
+                                Message = "Проект не найден"
+                            };
+                            await _messageBus.PublishAsync("ProjectResponseQueue", JsonConvert.SerializeObject(errorMessage));
+                        }
+
+                        await transaction.CommitAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        var errorMessage = new
+                        {
+                            Action = "Get",
+                            Status = "Error",
+                            CorrelationId = projectMessage.CorrelationId.ToString(),
+                            Message = ex.Message
+                        };
+
+                        await _messageBus.PublishAsync("ProjectResponseQueue", JsonConvert.SerializeObject(errorMessage));
+                        await transaction.RollbackAsync();
+                    }
+                }
             }
         }
 
@@ -92,7 +308,7 @@ namespace ProjectManagementService.Service
                             }
                         }
 
-                        await transaction.CommitAsync(); // Коммитим транзакцию
+                        await transaction.CommitAsync(); 
                         var successMessage = new
                         {
                             Action = "Create",
@@ -106,7 +322,7 @@ namespace ProjectManagementService.Service
                     }
                     catch (Exception ex)
                     {
-                        await transaction.RollbackAsync(); // Откатываем транзакцию при ошибке
+                        await transaction.RollbackAsync(); 
                         Console.WriteLine($"Ошибка при создании проекта: {ex.Message}");
                     }
                 }
@@ -134,11 +350,11 @@ namespace ProjectManagementService.Service
                         context.Projects.Update(project);
                         await context.SaveChangesAsync();
 
-                        await transaction.CommitAsync(); // Коммитим транзакцию
+                        await transaction.CommitAsync(); 
                     }
                     catch (Exception ex)
                     {
-                        await transaction.RollbackAsync(); // Откатываем транзакцию при ошибке
+                        await transaction.RollbackAsync();
                         Console.WriteLine($"Ошибка при обновлении проекта: {ex.Message}");
                     }
                 }
@@ -162,11 +378,11 @@ namespace ProjectManagementService.Service
                         context.Projects.Remove(project);
                         await context.SaveChangesAsync();
 
-                        await transaction.CommitAsync(); // Коммитим транзакцию
+                        await transaction.CommitAsync();
                     }
                     catch (Exception ex)
                     {
-                        await transaction.RollbackAsync(); // Откатываем транзакцию при ошибке
+                        await transaction.RollbackAsync(); 
                         Console.WriteLine($"Ошибка при удалении проекта: {ex.Message}");
                     }
                 }

@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.Text.Json.Serialization;
 
 namespace UserMenegementService.Model
 {
@@ -11,10 +12,10 @@ namespace UserMenegementService.Model
         public DateTime CreatedAt { get; set; }
         public string Role { get; set; }
 
-        // Связь с профилем фрилансера (nullable)
+        [JsonIgnore]
         public FreelancerProfile? FreelancerProfile { get; set; }
 
-        // Связь с профилем клиента (nullable)
+        [JsonIgnore]
         public ClientProfile? ClientProfile { get; set; }
     }
 }
