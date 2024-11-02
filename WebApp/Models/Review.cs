@@ -1,4 +1,4 @@
-﻿namespace RatingService.Model
+﻿namespace WebApp.Models
 {
     public class Review
     {
@@ -10,4 +10,5 @@
         public int? Rating { get; set; }      // Рейтинг, например, от 1 до 5
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
+
 }

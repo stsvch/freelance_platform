@@ -4,9 +4,9 @@
     <h2>Удаление проекта</h2>
     <p>Вы уверены, что хотите удалить проект: <strong>@Model.Title</strong>?</p>
     <form asp-action="DeleteProject" method="post">
-        <input type="hidden" asp-for="Id" />
+        <input type="hidden" asp-for="@Model.Id" />
         <button type="submit" class="btn btn-danger">Удалить</button>
-        <a href="@Url.Action("Index")" class="btn btn-secondary">Отмена</a>
     </form>
+    <a href="@Url.Action("Index")" class="btn btn-secondary">Отмена</a>
 </div>
 

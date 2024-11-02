@@ -15,10 +15,10 @@ namespace RatingService.Controllers
             _reviewService = reviewService;
         }
 
-        [HttpGet("{projectId}")]
-        public async Task<IActionResult> GetReviews(int projectId)
+        [HttpGet("{freelancerId}")]
+        public async Task<IActionResult> GetReviews(int freelancerId)
         {
-            var reviews = await _reviewService.GetReviews(projectId);
+            var reviews = await _reviewService.GetFreelancerReviews(freelancerId);
             return Ok(reviews);
         }
 
@@ -26,10 +26,10 @@ namespace RatingService.Controllers
         public async Task<IActionResult> CreateReview([FromBody] Review review)
         {
             var createdReview = await _reviewService.CreateReview(review);
-            return CreatedAtAction(nameof(GetReviews), new { projectId = createdReview.ProjectId }, createdReview);
+            return Ok(review);
         }
 
-        [HttpDelete("{reviewId}")]
+        [HttpPost("delete/{reviewId}")]
         public async Task<IActionResult> DeleteReview(int reviewId)
         {
             await _reviewService.DeleteReview(reviewId);

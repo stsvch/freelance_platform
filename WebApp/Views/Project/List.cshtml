@@ -6,7 +6,7 @@
 }
 
 <div class="container mt-4">
-    <h2 class="mb-4">Мои проекты</h2>
+    <h2 class="mb-4">Проекты</h2>
 
     @if (Model != null && Model.Any())
     {
@@ -28,16 +28,18 @@
                         <p><strong>Бюджет:</strong> @project.Budget руб.</p>
                         <p><strong>Создано:</strong> @project.CreatedAt?.ToString("dd.MM.yyyy")</p>
                         <p><strong>Обновлено:</strong> @project.UpdatedAt?.ToString("dd.MM.yyyy")</p>
-                        @if (role == "Client")
-                        {
-                            <a href="@Url.Action("Update", "Project", new { id = project.Id })" class="btn btn-secondary">Редактировать</a>
-                            <a href="@Url.Action("Delete", "Project", new { id = project.Id })" class="btn btn-danger">Удалить</a>
-                        }
-                        else if (role == "Freelancer")
-                        {
-                            <!-- Дополнительные действия для фрилансера -->
-                            <a href="@Url.Action("SubmitWork", "Projects", new { id = project.Id })" class="btn btn-success">Отправить работу</a>
-                        }
+
+
+
+                        <form asp-action="Response" method="post">
+                            <input type="hidden" asp-for="@project.Id" />
+                            <button type="submit" class="btn btn-primary">Откликнутся</button>
+                        </form>
+
+
+
+
+
                     </div>
                 </div>
             }

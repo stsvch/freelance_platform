@@ -60,9 +60,79 @@ namespace ProjectManagementService.Service
                 case "GetAllFreelancer":
                     await GetProjectsByFreelancerIdAsync(projectMessage);
                     break;
+                case "GetList":
+                    await GetProjectListAsync(projectMessage);
+                    break;
                 default:
                     Console.WriteLine($"Неизвестное действие: {action}");
                     break;
+            }
+        }
+
+        private async Task GetProjectListAsync(dynamic projectMessage)
+        {
+            using (var scope = _serviceProvider.CreateScope())
+            {
+                var context = scope.ServiceProvider.GetRequiredService<ProjectDbContext>();
+
+                using (var transaction = await context.Database.BeginTransactionAsync())
+                {
+                    try
+                    {
+                        var projects = await context.Projects
+                                                    .Where(p => p.FreelancerId == null)
+                                                    .ToListAsync();
+
+                        if (projects.Any())
+                        {
+                            var successMessage = new
+                            {
+                                Action = "GetList",
+                                Status = "Success",
+                                CorrelationId = projectMessage.CorrelationId,
+                                Projects = projects.Select(project => new
+                                {
+                                    project.Id,
+                                    project.Title,
+                                    project.Description,
+                                    project.Budget,
+                                    project.ClientId,
+                                    project.FreelancerId,
+                                    project.CreatedAt,
+                                    project.UpdatedAt
+                                }).ToList()
+                            };
+
+                            await _messageBus.PublishAsync("ProjectResponseQueue", JsonConvert.SerializeObject(successMessage));
+                        }
+                        else
+                        {
+                            var errorMessage = new
+                            {
+                                Action = "GetList",
+                                Status = "Error",
+                                CorrelationId = projectMessage.CorrelationId.ToString(),
+                                Message = "Проекты не найдены"
+                            };
+                            await _messageBus.PublishAsync("ProjectResponseQueue", JsonConvert.SerializeObject(errorMessage));
+                        }
+
+                        await transaction.CommitAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        var errorMessage = new
+                        {
+                            Action = "GetList",
+                            Status = "Error",
+                            CorrelationId = projectMessage.CorrelationId.ToString(),
+                            Message = ex.Message
+                        };
+
+                        await _messageBus.PublishAsync("ProjectResponseQueue", JsonConvert.SerializeObject(errorMessage));
+                        await transaction.RollbackAsync();
+                    }
+                }
             }
         }
 
@@ -85,7 +155,7 @@ namespace ProjectManagementService.Service
                         {
                             var successMessage = new
                             {
-                                Action = "GetAllFreelancert",
+                                Action = "GetAllFreelancer",
                                 Status = "Success",
                                 CorrelationId = projectMessage.CorrelationId,
                                 Projects = projects.Select(project => new
@@ -350,12 +420,28 @@ namespace ProjectManagementService.Service
                         context.Projects.Update(project);
                         await context.SaveChangesAsync();
 
-                        await transaction.CommitAsync(); 
+                        await transaction.CommitAsync();
+                        var successMessage = new
+                        {
+                            Action = "Update",
+                            Status = "Success",
+                            ProjectId = project.Id,
+                            CorrelationId = projectMessage.CorrelationId.ToString(),
+                            Message = "Проект успешно обновлен"
+                        };
+                        await _messageBus.PublishAsync("ProjectResponseQueue", JsonConvert.SerializeObject(successMessage));
                     }
                     catch (Exception ex)
                     {
+                        var message = new
+                        {
+                            Action = "Update",
+                            Status = "Error",
+                            CorrelationId = projectMessage.CorrelationId.ToString(),
+                            Message = "Проект не обновлен"
+                        };
+                        await _messageBus.PublishAsync("ProjectResponseQueue", JsonConvert.SerializeObject(message));
                         await transaction.RollbackAsync();
-                        Console.WriteLine($"Ошибка при обновлении проекта: {ex.Message}");
                     }
                 }
             }

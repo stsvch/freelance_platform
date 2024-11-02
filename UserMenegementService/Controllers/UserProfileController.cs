@@ -53,12 +53,12 @@ namespace UserMenegementService.Controllers
         }
 
 
-        [HttpPost("clients")]
-        public async Task<IActionResult> GetClients([FromBody] User model)
+        [HttpGet("clients")]
+        public async Task<IActionResult> GetClients([FromQuery] string userId)
         {
             try
             {
-                var clients = await _profileService.GetAllClientsExceptAsync(model.Id);
+                var clients = await _profileService.GetAllClientsExceptAsync(int.Parse(userId));
                 return Ok(clients);
             }
             catch (InvalidOperationException ex)

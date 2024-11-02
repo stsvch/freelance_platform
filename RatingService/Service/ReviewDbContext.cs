@@ -10,5 +10,6 @@ namespace RatingService.Service
         }
 
         public DbSet<Review> Reviews { get; set; }
+        public DbSet<Response> Responses { get; set; }
     }
 }

@@ -24,7 +24,7 @@ builder.Services.AddSingleton<IConnectionFactory>(sp =>
 
 // Добавление сервисов
 builder.Services.AddScoped<ReviewService>();
-
+builder.Services.AddScoped<ResponseService>();
 builder.Services.AddSingleton<RabbitMqService>();
 
 var app = builder.Build();
@@ -46,9 +46,6 @@ app.UseEndpoints(endpoints =>
     endpoints.MapControllers();
 });
 
-// Запускаем прослушивание сообщений RabbitMQ для создания отзывов
-var reviewService = app.Services.GetRequiredService<ReviewService>();
-reviewService.StartListeningForProjectCreated();
 
 app.Run();
 
