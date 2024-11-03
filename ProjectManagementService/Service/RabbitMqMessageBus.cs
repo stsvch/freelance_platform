@@ -29,9 +29,11 @@ namespace ProjectManagementService.Service
         public async Task PublishAsync(string queueName, string message)
         {
             var body = Encoding.UTF8.GetBytes(message);
-            _channel.BasicPublish(exchange: "", routingKey: queueName, basicProperties: null, body: body);
+
+            _channel.BasicPublish(exchange: "", routingKey: queueName, body: body);
             await Task.CompletedTask;
         }
+
 
         public void ListenForMessages(string queueName, Func<string, Task> onMessageReceived)
         {

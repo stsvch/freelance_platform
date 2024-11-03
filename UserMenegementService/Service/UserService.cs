@@ -26,7 +26,11 @@ namespace UserMenegementService.Service
 
         public async Task<User> AuthenticateUserAsync(string email, string password)
         {
-            var user = await _context.Users.SingleOrDefaultAsync(u => u.Email == email);
+            var user = await _context.Users
+                            .Include(u => u.FreelancerProfile)
+                            .Include(u => u.ClientProfile) // Добавляем ClientProfile
+                            .SingleOrDefaultAsync(u => u.Email == email);
+
             if (user == null || !VerifyPassword(user, password))
             {
                 return null;
@@ -36,12 +40,14 @@ namespace UserMenegementService.Service
 
         public async Task<User> RegisterUserAsync(UserRegister registerModel)
         {
+            // Проверка на существующего пользователя
             var existingUser = await _context.Users.SingleOrDefaultAsync(u => u.Email == registerModel.Email);
             if (existingUser != null)
             {
-                throw new InvalidOperationException("User with this username already exists.");
+                throw new InvalidOperationException("User with this email already exists.");
             }
 
+            // Создаем нового пользователя
             var newUser = new User
             {
                 Username = registerModel.Username,
@@ -51,9 +57,11 @@ namespace UserMenegementService.Service
                 CreatedAt = DateTime.UtcNow
             };
 
+            // Сохраняем пользователя, чтобы получить его ID
             _context.Users.Add(newUser);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(); // Теперь newUser.Id установлен
 
+            // Создаем профиль в зависимости от роли
             if (registerModel.Role == "Freelancer")
             {
                 var freelancerProfile = new FreelancerProfile
@@ -63,6 +71,7 @@ namespace UserMenegementService.Service
                     Bio = registerModel.Bio
                 };
                 _context.FreelancerProfiles.Add(freelancerProfile);
+                newUser.FreelancerProfile = freelancerProfile; // Присваиваем профиль пользователю
             }
             else if (registerModel.Role == "Client")
             {
@@ -73,12 +82,21 @@ namespace UserMenegementService.Service
                     Description = registerModel.Description
                 };
                 _context.ClientProfiles.Add(clientProfile);
+                newUser.ClientProfile = clientProfile; // Присваиваем профиль пользователю
             }
 
+            // Сохраняем профиль
             await _context.SaveChangesAsync();
 
-            return newUser;
+            // Перезагружаем пользователя с профилями для корректной загрузки связанных данных
+            var registeredUser = await _context.Users
+                .Include(u => u.FreelancerProfile)
+                .Include(u => u.ClientProfile)
+                .SingleOrDefaultAsync(u => u.Id == newUser.Id);
+
+            return registeredUser;
         }
+
 
         private bool VerifyPassword(User user, string password)
         {

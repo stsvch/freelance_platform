@@ -17,7 +17,7 @@ namespace RatingService.Controllers
         }
 
         [HttpGet("{clientId}")]
-        public async Task<IActionResult> GetReviews(int clientId)
+        public async Task<IActionResult> GetResponse(int clientId)
         {
             var response = await _responseService.GetClientResponse(clientId);
             if (response == null) 
@@ -27,8 +27,8 @@ namespace RatingService.Controllers
             return Ok(response);
         }
 
-        [HttpPost("{projectId}")]
-        public async Task<IActionResult> Accept(int projectId)
+        [HttpGet("{projectId}")]
+        public async Task<IActionResult> GetProjectResponse(int projectId)
         {
             var projectResponse = await _responseService.GetProjectResponse(projectId);
             foreach(var response in projectResponse)
@@ -38,8 +38,22 @@ namespace RatingService.Controllers
             return Ok();
         }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteReview(int id)
+        [HttpPost("create")]
+        public async Task<IActionResult> UpdateResponse(Response response)
+        {
+            await _responseService.Create(response);
+            return NoContent();
+        }
+
+        [HttpPost("update/{id}")]
+        public async Task<IActionResult> UpdateResponse(int id)
+        {
+            await _responseService.Update(id);
+            return NoContent();
+        }
+
+        [HttpPost("delete/{id}")]
+        public async Task<IActionResult> DeleteResponse(int id)
         {
             await _responseService.Delete(id);
             return NoContent();

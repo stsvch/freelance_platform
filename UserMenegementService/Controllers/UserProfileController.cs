@@ -37,6 +37,28 @@ namespace UserMenegementService.Controllers
             return Ok(profile);
         }
 
+        [HttpGet("freelancerId/{id}")]
+        public async Task<IActionResult> GetFreelancerProfileById(int id)
+        {
+            var profile = await _profileService.GetFreelancerProfileByIdAsync(id);
+            if (profile == null)
+            {
+                return NotFound("Freelancer profile not found.");
+            }
+            return Ok(profile);
+        }
+
+        [HttpGet("clientId/{id}")]
+        public async Task<IActionResult> GetClientProfileById(int id)
+        {
+            var profile = await _profileService.GetClientProfileByIdAsync(id);
+            if (profile == null)
+            {
+                return NotFound("Client profile not found.");
+            }
+            return Ok(profile);
+        }
+
         [HttpGet("freelancers")]
         public async Task<IActionResult> GetFreelancers([FromQuery] string userId)
         {

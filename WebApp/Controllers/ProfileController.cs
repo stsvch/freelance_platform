@@ -10,11 +10,11 @@ namespace WebApp.Controllers
     [Route("profile")]
     public class ProfileController : Controller
     {
-        private readonly IHttpClientFactory _httpClientFactory;
+        private readonly ProfileService _profileService;
 
-        public ProfileController(IHttpClientFactory httpClientFactory)
+        public ProfileController(ProfileService profileService)
         {
-            _httpClientFactory = httpClientFactory;
+            _profileService = profileService;
         }
 
         [HttpGet]
@@ -26,110 +26,83 @@ namespace WebApp.Controllers
             {
                 return RedirectToAction("Login", "Auth");
             }
-
-            var client = _httpClientFactory.CreateClient();
-            HttpResponseMessage response = null;
             object profileData = null; 
 
             switch (role)
             {
                 case "Freelancer":
                     {
-                        response = await client.GetAsync($"https://localhost:7145/api/profile/freelancer/{userId}");
+                        profileData = await _profileService.GetFreelancerProfileAsync(int.Parse(userId));
                         break;
                     }
                 case "Client":
                     {
-                        response = await client.GetAsync($"https://localhost:7145/api/profile/client/{userId}");
+                        profileData = await _profileService.GetClientProfileAsync(int.Parse(userId));
                         break;
                     }
                 default:
                     return RedirectToAction("Login", "Auth");
             }
-            if (response.IsSuccessStatusCode)
+            if (profileData!=null)
             {
-                var contentResponse = await response.Content.ReadAsStringAsync();
-                if (role == "Freelancer")
-                {
-                    profileData = JsonConvert.DeserializeObject<FreelancerProfile>(contentResponse);
-                }
-                else if (role == "Client")
-                {
-                    profileData = JsonConvert.DeserializeObject<ClientProfile>(contentResponse);
-                }
+                return View(profileData);
             }
             else
             {
                 ViewBag.ErrorMessage = "Не удалось загрузить профиль. Попробуйте позже.";
                 return View();
             }
-            return View(profileData);
         }
 
-        [HttpGet("freelancer")]
-        public async Task<IActionResult> Freelancer(int id)
+        [HttpGet("freelancer/{userId}")]
+        public async Task<IActionResult> Freelancer(int userid)
         {
-            object profileData = null;
-            var client = _httpClientFactory.CreateClient();
-            HttpResponseMessage response = null;
-            if (id!=null)
+            if (userid != null)
             {
-                response = await client.GetAsync($"https://localhost:7145/api/profile/freelancer/{id}");
-                var contentResponse = await response.Content.ReadAsStringAsync();
-                profileData = JsonConvert.DeserializeObject<FreelancerProfile>(contentResponse);
+                var profileData = await _profileService.GetFreelancerProfileAsync(userid);
 
+                return View("Index", profileData);
             }
             else
             {
                 ViewBag.ErrorMessage = "Не удалось загрузить профиль. Попробуйте позже.";
                 return View("Index");
             }
-            return View("Index", profileData);
         }
 
-        [HttpGet("client")]
-        public async Task<IActionResult> Client(int id)
+        [HttpGet("client/{userId}")]
+        public async Task<IActionResult> Client(int userId)
         {
-            object profileData = null;
-            var client = _httpClientFactory.CreateClient();
-            HttpResponseMessage response = null;
-            if (id != null)
+            if (userId != null)
             {
-                response = await client.GetAsync($"https://localhost:7145/api/profile/client/{id}");
-                var contentResponse = await response.Content.ReadAsStringAsync();
-                profileData = JsonConvert.DeserializeObject<ClientProfile>(contentResponse);
+                var profileData = await _profileService.GetClientProfileAsync(userId);
+                return View("Index", profileData);
             }
             else
             {
                 ViewBag.ErrorMessage = "Не удалось загрузить профиль. Попробуйте позже.";
                 return View("Index");
             }
-            return View("Index", profileData);
         }
 
         [HttpGet("clients")]
         public async Task<IActionResult> Clients()
         {
             var userId = HttpContext.Session.GetString("UserId");
-            var message = JsonConvert.SerializeObject(new
+
+            if (string.IsNullOrEmpty(userId))
             {
-                UserId = userId
-            });
-
-            var client = _httpClientFactory.CreateClient();
-            var content = new StringContent(message, Encoding.UTF8, "application/json");
-
-            var response = await client.PostAsync("https://localhost:7145/api/profile/clients", content);
-
-            if (response.IsSuccessStatusCode)
+                ViewBag.ErrorMessage = "Не удалось получить UserId из сессии.";
+                return View();
+            }
+            var clients = await _profileService.GetClientsAsync(userId);
+            if (clients!=null)
             {
-                var contentResponse = await response.Content.ReadAsStringAsync();
-                var responseData = JsonConvert.DeserializeObject<List<ClientProfile>>(contentResponse);
-                return View(responseData);  // Передаем список клиентов в представление
+                return View(clients);  // Передаем список фрилансеров в представление
             }
             else
             {
-                ViewBag.ErrorMessage = "Не удалось загрузить список клиентов. Попробуйте позже.";
+                ViewBag.ErrorMessage = "Не удалось загрузить список фрилансеров. Попробуйте позже.";
                 return View();  // Если не удалось загрузить данные
             }
         }
@@ -144,19 +117,10 @@ namespace WebApp.Controllers
                 ViewBag.ErrorMessage = "Не удалось получить UserId из сессии.";
                 return View();
             }
-
-            var client = _httpClientFactory.CreateClient();
-
-            // Формируем URL с параметром userId, который будет передан в запрос
-            var url = $"https://localhost:7145/api/profile/freelancers?userId={userId}";
-
-            var response = await client.GetAsync(url);  // Отправляем GET-запрос
-
-            if (response.IsSuccessStatusCode)
+            var freelancers = await _profileService.GetFreelancersAsync(userId);
+            if (freelancers != null)
             {
-                var contentResponse = await response.Content.ReadAsStringAsync();
-                var responseData = JsonConvert.DeserializeObject<List<FreelancerProfile>>(contentResponse);
-                return View(responseData);  // Передаем список фрилансеров в представление
+                return View(freelancers);  // Передаем список фрилансеров в представление
             }
             else
             {
@@ -164,7 +128,6 @@ namespace WebApp.Controllers
                 return View();  // Если не удалось загрузить данные
             }
         }
-
 
     }
 }

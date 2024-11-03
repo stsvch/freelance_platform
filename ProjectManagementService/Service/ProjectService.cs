@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using ProjectManagementService.Model;
+using System.Diagnostics;
 
 namespace ProjectManagementService.Service
 {
@@ -353,6 +354,8 @@ namespace ProjectManagementService.Service
                 {
                     try
                     {
+                        var stopwatch = new Stopwatch();
+                        stopwatch.Start();
                         var project = new Project
                         {
                             Title = projectMessage.Title,
@@ -365,39 +368,31 @@ namespace ProjectManagementService.Service
                         };
 
                         context.Projects.Add(project);
-                        try
-                        {
-                            await context.SaveChangesAsync();
-                        }
-                        catch (DbUpdateException ex)
-                        {
-                            Console.WriteLine("Ошибка при сохранении изменений: " + ex.Message);
-                            if (ex.InnerException != null)
-                            {
-                                Console.WriteLine("Inner Exception: " + ex.InnerException.Message);
-                            }
-                        }
-
-                        await transaction.CommitAsync(); 
+                        await context.SaveChangesAsync();
+                                      
                         var successMessage = new
                         {
                             Action = "Create",
                             Status = "Success",
                             ProjectId = project.Id,
-                            CorrelationId = projectMessage.CorrelationId.ToString(),
+                            CorrelationId = projectMessage.CorrelationId,
                             Message = "Проект успешно создан"
                         };
-                        Console.WriteLine(projectMessage.CorrelationId.ToString());
+                        
                         await _messageBus.PublishAsync("ProjectResponseQueue", JsonConvert.SerializeObject(successMessage));
+                        stopwatch.Stop();
+                        Console.WriteLine($"Time taken for : {stopwatch.ElapsedMilliseconds} ms");
+                        await transaction.CommitAsync();
                     }
                     catch (Exception ex)
                     {
-                        await transaction.RollbackAsync(); 
+                        await transaction.RollbackAsync();
                         Console.WriteLine($"Ошибка при создании проекта: {ex.Message}");
                     }
                 }
             }
         }
+
 
         public async Task UpdateProjectAsync(dynamic projectMessage)
         {
@@ -409,12 +404,12 @@ namespace ProjectManagementService.Service
                 {
                     try
                     {
-                        var project = await context.Projects.FindAsync((int)projectMessage.projectId);
+                        var project = await context.Projects.FindAsync((int)projectMessage.ProjectId);
                         if (project == null)
                             throw new Exception("Проект не найден");
 
-                        project.Title = projectMessage.title ?? project.Title;
-                        project.Description = projectMessage.description ?? project.Description;
+                        project.Title = projectMessage.Title ?? project.Title;
+                        project.Description = projectMessage.Description ?? project.Description;
                         project.UpdatedAt = DateTime.UtcNow;
 
                         context.Projects.Update(project);
@@ -457,18 +452,31 @@ namespace ProjectManagementService.Service
                 {
                     try
                     {
-                        var project = await context.Projects.FindAsync((int)projectMessage.projectId);
+                        var project = await context.Projects.FindAsync((int)projectMessage.ProjectId);
                         if (project == null)
                             throw new Exception("Проект не найден");
 
                         context.Projects.Remove(project);
                         await context.SaveChangesAsync();
-
+                        var successMessage = new
+                        {
+                            Action = "Delete",
+                            Status = "Success",
+                            CorrelationId = projectMessage.CorrelationId.ToString()
+                        };
+                        await _messageBus.PublishAsync("ProjectResponseQueue", JsonConvert.SerializeObject(successMessage));
                         await transaction.CommitAsync();
                     }
                     catch (Exception ex)
                     {
-                        await transaction.RollbackAsync(); 
+                        await transaction.RollbackAsync();
+                        var successMessage = new
+                        {
+                            Action = "Delete",
+                            Status = "Error",
+                            CorrelationId = projectMessage.CorrelationId.ToString()
+                        };
+                        await _messageBus.PublishAsync("ProjectResponseQueue", JsonConvert.SerializeObject(successMessage));
                         Console.WriteLine($"Ошибка при удалении проекта: {ex.Message}");
                     }
                 }

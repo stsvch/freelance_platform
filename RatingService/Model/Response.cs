@@ -6,5 +6,6 @@
         public int ProjectId { get; set; }  // Ссылка на проект
         public int FreelancerId { get; set; }
         public int ClientId {  get; set; }
+        public string? Message { get; set; }
     }
 }

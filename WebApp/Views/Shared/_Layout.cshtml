@@ -26,13 +26,16 @@
                             <li class="nav-item">
                                 <a class="nav-link text-dark" asp-area="" asp-controller="Profile" asp-action="Index">Профиль</a>
                             </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Project" asp-action="Index">Мои проекты</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Auth" asp-action="Logout">Выход</a>
+                            </li>
                             @if (role == "Client")
                             {
                                 <li class="nav-item">
                                     <a class="nav-link text-dark" asp-area="" asp-controller="Profile" asp-action="Freelancers">Фрилансеры</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link text-dark" asp-area="" asp-controller="Projects" asp-action="Index">Мои Проекты</a>
                                 </li>
                                 <li class="nav-item">
                                     <a class="nav-link text-dark" asp-area="" asp-controller="Responses" asp-action="Index">Отклики</a>
@@ -44,10 +47,7 @@
                                     <a class="nav-link text-dark" asp-area="" asp-controller="Profile" asp-action="Clients">Заказчики</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link text-dark" asp-area="" asp-controller="Projects" asp-action="Index">Проекты</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link text-dark" asp-area="" asp-controller="Projects" asp-action="MyProjects">Мои проекты</a>
+                                    <a class="nav-link text-dark" asp-area="" asp-controller="Project" asp-action="List">Проекты</a>
                                 </li>
                             }
                         </ul>

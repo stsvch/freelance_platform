@@ -19,6 +19,13 @@ namespace WebApp.Controllers
             _httpClientFactory = httpClientFactory;
         }
 
+        [HttpGet("logout")]
+        public IActionResult Logout()
+        {
+            HttpContext.Session.Clear();
+            return RedirectToAction("Login");
+        }
+
         [HttpGet("login")]
         public IActionResult Login()
         {

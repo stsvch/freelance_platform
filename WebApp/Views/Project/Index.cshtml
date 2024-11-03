@@ -49,6 +49,15 @@
             Нет доступных проектов.
         </div>
     }
+    <div class="alert alert-info">
+        @if (role == "Client")
+        {
+            <form action="@Url.Action("Create", "Project")" method="get" style="display: inline;">
+                <button type="submit" class="btn btn-secondary">Создать</button>
+            </form>
+        }
+    </div>
+
 </div>
 
 <!-- Скрипт для раскрытия и скрытия деталей проекта -->

@@ -41,10 +41,18 @@ builder.Services.AddSession(options =>
 });
 // Настроим RabbitMqService для работы с RabbitMQ
 builder.Services.AddSingleton<RabbitMqService>();
+builder.Services.AddSingleton<ProjectService>();
+builder.Services.AddSingleton<ProfileService>(); // или AddScoped<ProfileService>()
+
+
 
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
+
+// Запуск прослушивания сообщений из очереди RabbitMQ
+var rabbitMqService = app.Services.GetRequiredService<RabbitMqService>();
+_ = rabbitMqService.ListenForMessagesAsync("ProjectResponseQueue");
 
 app.UseSession();
 

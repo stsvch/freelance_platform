@@ -1,44 +1,35 @@
 ﻿@model IEnumerable<ProjectModel>
-@using Microsoft.AspNetCore.Http; <!-- Убедитесь, что пространство имен подключено -->
+@using Microsoft.AspNetCore.Http;
 @{
     var userId = Context.Session.GetString("UserId");
     var role = ViewData["Role"] as string;
 }
 
 <div class="container mt-4">
-    <h2 class="mb-4">Проекты</h2>
+    <h2 class="mb-4">Доступные проекты</h2>
 
     @if (Model != null && Model.Any())
     {
         <div class="list-group">
             @foreach (var project in Model)
             {
-                <div class="list-group-item">
+                <div class="list-group-item mb-4">
                     <div class="d-flex justify-content-between">
                         <h5 class="mb-1">@project.Title</h5>
-                        <!-- Кнопка для раскрытия информации -->
                         <button class="btn btn-link" type="button" onclick="toggleProjectDetails(@project.Id)">
                             Подробнее
                         </button>
                     </div>
 
-                    <!-- Скрытая информация о проекте -->
                     <div id="projectDetails-@project.Id" style="display:none;" class="project-details mt-3">
                         <p><strong>Описание:</strong> @project.Description</p>
                         <p><strong>Бюджет:</strong> @project.Budget руб.</p>
                         <p><strong>Создано:</strong> @project.CreatedAt?.ToString("dd.MM.yyyy")</p>
                         <p><strong>Обновлено:</strong> @project.UpdatedAt?.ToString("dd.MM.yyyy")</p>
-
-
-
                         <form asp-action="Response" method="post">
                             <input type="hidden" asp-for="@project.Id" />
                             <button type="submit" class="btn btn-primary">Откликнутся</button>
                         </form>
-
-
-
-
 
                     </div>
                 </div>
@@ -48,12 +39,11 @@
     else
     {
         <div class="alert alert-warning">
-            Нет доступных проектов.
+            Нет проектов.
         </div>
     }
 </div>
 
-<!-- Скрипт для раскрытия и скрытия деталей проекта -->
 <script>
     function toggleProjectDetails(projectId) {
         var details = document.getElementById('projectDetails-' + projectId);

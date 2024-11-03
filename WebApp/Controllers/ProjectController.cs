@@ -11,11 +11,10 @@ namespace WebApp.Controllers
     [Route("project")]
     public class ProjectController : Controller
     {
-        private readonly RabbitMqService _rabbitMqService;
-
-        public ProjectController(RabbitMqService rabbitMqService)
+        private readonly ProjectService _projectService;
+        public ProjectController(ProjectService projectService)
         {
-            _rabbitMqService = rabbitMqService;
+            _projectService = projectService;
         }
 
         [HttpGet]
@@ -28,55 +27,10 @@ namespace WebApp.Controllers
         [HttpGet("freelancer/{id}")]
         public async Task<IActionResult> Freelancer(int id)
         {
-            var correlationId = Guid.NewGuid().ToString();
-            var message = JsonConvert.SerializeObject(new
+            var model = await _projectService.GetProjectsForFreelancerAsync(id);
+            if (model == null || !model.Any())
             {
-                Action = "GetAllFreelancer",
-                FreelancerId = id,
-                CorrelationId = correlationId
-            });
-
-            List<ProjectModel> model = new List<ProjectModel>();
-
-            _rabbitMqService.PublishMessage("ProjectQueue", message, correlationId);
-
-            var responseMessage = await _rabbitMqService.WaitForMessageAsync("ProjectResponseQueue");
-            if (!string.IsNullOrEmpty(responseMessage))
-            {
-                var response = JsonConvert.DeserializeObject<dynamic>(responseMessage);
-                if (response.Action == "GetAllFreelancer" && response.CorrelationId == correlationId)
-                {
-                    if (response.Status == "Success")
-                    {
-                        var projects = response.Projects;
-                        foreach (var project in projects)
-                        {
-                            model.Add(new ProjectModel
-                            {
-                                Id = project.Id,
-                                Title = project.Title,
-                                Description = project.Description,
-                                Budget = project.Budget,
-                                ClientId = project.ClientId,
-                                FreelancerId = project.FreelancerId,
-                                CreatedAt = project.CreatedAt,
-                                UpdatedAt = project.UpdatedAt
-                            });
-                        }
-                    }
-                    else
-                    {
-                        TempData["ErrorMessage"] = "Ошибка при получении списка проектов.";
-                    }
-                }
-                else
-                {
-                    TempData["ErrorMessage"] = "Не удалось получить проекты.";
-                }
-            }
-            else
-            {
-                TempData["ErrorMessage"] = "Не удалось получить ответ от сервиса.";
+                TempData["ErrorMessage"] = "Не удалось получить проекты.";
             }
             return View("Index", model);
         }
@@ -84,56 +38,10 @@ namespace WebApp.Controllers
         [HttpGet("client/{id}")]
         public async Task<IActionResult> Client(int id)
         {
-            var correlationId = Guid.NewGuid().ToString();
-            var message = JsonConvert.SerializeObject(new
+            var model = await _projectService.GetProjectsForClientAsync(id);
+            if (model == null || !model.Any())
             {
-                Action = "GetAllClient",
-                ClientId = id,
-                CorrelationId = correlationId
-            });
-
-            List<ProjectModel> model = new List<ProjectModel>();
-
-            _rabbitMqService.PublishMessage("ProjectQueue", message, correlationId);
-
-            var responseMessage = await _rabbitMqService.WaitForMessageAsync("ProjectResponseQueue");
-            if (!string.IsNullOrEmpty(responseMessage))
-            {
-                var response = JsonConvert.DeserializeObject<dynamic>(responseMessage);
-                if (response.Action == "GetAllClient" && response.CorrelationId == correlationId)
-                {
-                    if (response.Status == "Success")
-                    {
-                        var projects = response.Projects;
-
-                        foreach (var project in projects)
-                        {
-                            model.Add(new ProjectModel
-                            {
-                                Id = project.Id,
-                                Title = project.Title,
-                                Description = project.Description,
-                                Budget = project.Budget,
-                                ClientId = project.ClientId,
-                                FreelancerId = project.FreelancerId,
-                                CreatedAt = project.CreatedAt,
-                                UpdatedAt = project.UpdatedAt
-                            });
-                        }
-                    }
-                    else
-                    {
-                        TempData["ErrorMessage"] = "Ошибка при получении списка проектов.";
-                    }
-                }
-                else
-                {
-                    TempData["ErrorMessage"] = "Не удалось получить проекты.";
-                }
-            }
-            else
-            {
-                TempData["ErrorMessage"] = "Не удалось получить ответ от сервиса.";
+                TempData["ErrorMessage"] = "Не удалось получить проекты.";
             }
             return View("Index", model);
         }
@@ -148,49 +56,7 @@ namespace WebApp.Controllers
         [HttpGet("update/{id}")]
         public async Task<IActionResult> Update(int id)
         {
-            var correlationId = Guid.NewGuid().ToString();
-            var message = JsonConvert.SerializeObject(new
-            {
-                Action = "Get",
-                ProjectId = id,
-                CorrelationId = correlationId
-            });
-
-            ProjectModel model = new ProjectModel();
-
-            _rabbitMqService.PublishMessage("ProjectQueue", message, correlationId);
-            var responseMessage = await _rabbitMqService.WaitForMessageAsync("ProjectResponseQueue");
-
-            if (!string.IsNullOrEmpty(responseMessage))
-            {
-                var response = JsonConvert.DeserializeObject<dynamic>(responseMessage);
-                if (response.Action == "Get" && response.CorrelationId == correlationId)
-                {
-                    if (response.Status == "Success")
-                    {
-                        model.Title = response.Project.Title;
-                        model.FreelancerId = response.Project.FreelancerId;
-                        model.Budget = response.Project.Budget;
-                        model.ClientId = response.Project.ClientId;
-                        model.Description = response.Project.Description;
-                        model.CreatedAt = response.Project.CreatedAt;
-                        model.UpdatedAt = response.Project.UpdatedAt;
-
-                    }
-                    else
-                    {
-                        TempData["ErrorMessage"] = "Ошибка при обновлении проекта.";
-                    }
-                }
-                else
-                {
-                    TempData["ErrorMessage"] = "Не удалось получить проект.";
-                }
-            }
-            else
-            {
-                TempData["ErrorMessage"] = "Не удалось получить ответ от сервиса.";
-            }
+            ProjectModel model = await _projectService.GetProject(id);
 
             return View(model);
         }
@@ -199,49 +65,7 @@ namespace WebApp.Controllers
         [HttpGet("delete/{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var correlationId = Guid.NewGuid().ToString();
-            var message = JsonConvert.SerializeObject(new
-            {
-                Action = "Get",
-                ProjectId = id,
-                CorrelationId = correlationId
-            });
-
-            ProjectModel model = new ProjectModel();
-
-            _rabbitMqService.PublishMessage("ProjectQueue", message, correlationId);
-            var responseMessage = await _rabbitMqService.WaitForMessageAsync("ProjectResponseQueue");
-
-            if (!string.IsNullOrEmpty(responseMessage))
-            {
-                var response = JsonConvert.DeserializeObject<dynamic>(responseMessage);
-                if (response.Action == "Get" && response.CorrelationId == correlationId)
-                {
-                    if (response.Status == "Success")
-                    {
-                        model.Title = response.Project.Title;
-                        model.FreelancerId = response.Project.FreelancerId;
-                        model.Budget = response.Project.Budget;
-                        model.ClientId = response.Project.ClientId;
-                        model.Description = response.Project.Description;
-                        model.CreatedAt = response.Project.CreatedAt;
-                        model.UpdatedAt = response.Project.UpdatedAt;
-
-                    }
-                    else
-                    {
-                        TempData["ErrorMessage"] = "Ошибка при обновлении проекта.";
-                    }
-                }
-                else
-                {
-                    TempData["ErrorMessage"] = "Не удалось получить проект.";
-                }
-            }
-            else
-            {
-                TempData["ErrorMessage"] = "Не удалось получить ответ от сервиса.";
-            }
+            ProjectModel model = await _projectService.GetProject(id);
 
             return View(model);
         }
@@ -249,164 +73,44 @@ namespace WebApp.Controllers
         [HttpPost("create")]
         public async Task<IActionResult> CreateProject([FromForm] ProjectModel project)
         {
-            var correlationId = Guid.NewGuid().ToString();
-            var message = JsonConvert.SerializeObject(new
-            {
-                Action = "Create",
-                Title = project.Title,
-                Budget = project.Budget,
-                Description = project.Description,
-                ClientId = HttpContext.Session.GetString("Id"),
-                FreelancerId = (int?)null,
-                CorrelationId = correlationId
-            });
-            Console.WriteLine(correlationId);
-            _rabbitMqService.PublishMessage("ProjectQueue", message, correlationId);
-
-            var responseMessage = await _rabbitMqService.WaitForMessageAsync("ProjectResponseQueue");
-            var response = JsonConvert.DeserializeObject<dynamic>(responseMessage);
-
-            if (response.Action == "Create" && response.CorrelationId == correlationId)
-            {
-                if (response.Status == "Success")
-                {
-                    TempData["SuccessMessage"] = "Проект успешно создан!";
-                }
-                else
-                {
-                    TempData["ErrorMessage"] = "Ошибка при создании проекта.";
-                }
-            }
-
+            var id = HttpContext.Session.GetString("Id");
+            await _projectService.Create(id, project);
             return RedirectToAction("Create");
         }
 
-        [HttpPost("update/{id}")]
-        public IActionResult UpdateProject(int id, [FromForm] ProjectModel project)
+        [HttpPost("update")]
+        public async Task<IActionResult> UpdateProject(int id, [FromForm] ProjectModel project)
         {
-            var correlationId = Guid.NewGuid().ToString();
-            var message = JsonConvert.SerializeObject(new
-            {
-                Action = "Update",
-                ProjectId = id,
-                Title = project.Title,
-                Budget = project.Budget,
-                Description = project.Description,
-                CorrelationId = correlationId, 
+            await _projectService.Update(id, project);
 
-            });
-
-            _rabbitMqService.PublishMessage("ProjectQueue", message, correlationId);
-
-            _rabbitMqService.ListenForMessages("ProjectResponseQueue", (responseMessage) =>
-            {
-                var response = JsonConvert.DeserializeObject<dynamic>(responseMessage);
-                if (response.Action == "Update" && response.CorrelationId == correlationId)
-                {
-                    if (response.Status == "Success")
-                    {
-                        TempData["SuccessMessage"] = "Проект успешно обновлен!";
-                    }
-                    else
-                    {
-                        TempData["ErrorMessage"] = "Ошибка при обновлении проекта.";
-                    }
-                }
-            });
-
-            return RedirectToAction("Update", new { id });
+            return RedirectToAction("Index");
         }
 
-        [HttpPost("delete/{id}")]
-        public IActionResult DeleteProject(int id)
+        [HttpPost("delete")]
+        public async Task<IActionResult> DeleteProject(int id)
         {
-            var correlationId = Guid.NewGuid().ToString();
-            var message = JsonConvert.SerializeObject(new
-            {
-                Action = "Delete",
-                ProjectId = id,
-                CorrelationId = correlationId
-            });
+            var response = await _projectService.Delete(id);
 
-            _rabbitMqService.PublishMessage("ProjectQueue", message, correlationId);
-
-            _rabbitMqService.ListenForMessages("ProjectResponseQueue", (responseMessage) =>
+            if (response.Action == "Delete")
             {
-                var response = JsonConvert.DeserializeObject<dynamic>(responseMessage);
-                if (response.Action == "Delete" && response.CorrelationId == correlationId)
+                if (response.Status == "Success")
                 {
-                    if (response.Status == "Success")
-                    {
-                        TempData["SuccessMessage"] = "Проект успешно удален!";
-                    }
-                    else
-                    {
-                        TempData["ErrorMessage"] = "Ошибка при удалении проекта.";
-                    }
-                }
-            });
-
-            return RedirectToAction("Delete", new { id });
-        }
-
-        [HttpGet("list")]
-        public async Task<IActionResult> ProjectList()
-        {
-            
-            var correlationId = Guid.NewGuid().ToString();
-            var message = JsonConvert.SerializeObject(new
-            {
-                Action = "GetList",
-                CorrelationId = correlationId
-            });
-
-            List<ProjectModel> model = new List<ProjectModel>();
-
-            _rabbitMqService.PublishMessage("ProjectQueue", message, correlationId);
-
-            var responseMessage = await _rabbitMqService.WaitForMessageAsync("ProjectResponseQueue");
-            if (!string.IsNullOrEmpty(responseMessage))
-            {
-                var response = JsonConvert.DeserializeObject<dynamic>(responseMessage);
-                if (response.Action == "GetList" && response.CorrelationId == correlationId)
-                {
-                    if (response.Status == "Success")
-                    {
-                        var projects = response.Projects;
-                        foreach (var project in projects)
-                        {
-                            model.Add(new ProjectModel
-                            {
-                                Id = project.Id,
-                                Title = project.Title,
-                                Description = project.Description,
-                                Budget = project.Budget,
-                                ClientId = project.ClientId,
-                                CreatedAt = project.CreatedAt,
-                                UpdatedAt = project.UpdatedAt
-                            });
-                        }
-                    }
-                    else
-                    {
-                        TempData["ErrorMessage"] = "Ошибка при получении списка проектов.";
-                    }
+                    TempData["SuccessMessage"] = "Проект успешно!";
                 }
                 else
                 {
-                    TempData["ErrorMessage"] = "Не удалось получить проекты.";
+                    TempData["ErrorMessage"] = "Ошибка при проекта.";
                 }
             }
-            else
-            {
-                TempData["ErrorMessage"] = "Не удалось получить ответ от сервиса.";
-            }
-            return View(model);
+
+            return RedirectToAction("Index");
         }
 
-        public void ResponseToProject()
-        {
-
+        [HttpGet("list")]
+        public async Task<IActionResult> List()
+        {          
+            List<ProjectModel> model = await _projectService.GetList();
+            return View(model);
         }
     }
 }

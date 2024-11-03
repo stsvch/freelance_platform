@@ -31,7 +31,7 @@
         </div>
         <input type="hidden" asp-for="Id" />
         <form asp-action="UpdateProject" method="post">
-            <input type="hidden" asp-for="@Model.Id" />
+            <input for="id" type="hidden" name="id" value="@Model.Id" />
             <button type="submit" class="btn btn-danger">Изменить</button>
         </form>
         <a href="@Url.Action("Index")" class="btn btn-secondary">Отмена</a>

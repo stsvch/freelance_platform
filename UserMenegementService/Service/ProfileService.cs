@@ -9,6 +9,9 @@ namespace UserMenegementService.Service
         Task<FreelancerProfile> GetFreelancerProfileAsync(int userId);
         Task<ClientProfile> GetClientProfileAsync(int userId);
 
+        Task<FreelancerProfile> GetFreelancerProfileByIdAsync(int id);  // Поиск по Id профиля
+        Task<ClientProfile> GetClientProfileByIdAsync(int id);
+
         Task<List<FreelancerProfile>> GetAllFreelancersExceptAsync(int userId);
         Task<List<ClientProfile>> GetAllClientsExceptAsync(int userId);
     }
@@ -51,6 +54,20 @@ namespace UserMenegementService.Service
                                  .Where(c => c.UserId != userId)
                                  .Include(с => с.User)
                                  .ToListAsync();
+        }
+
+        public async Task<FreelancerProfile> GetFreelancerProfileByIdAsync(int id)
+        {
+            return await context.FreelancerProfiles
+                .Include(fp => fp.User)
+                .FirstOrDefaultAsync(fp => fp.Id == id);  // Поиск по Id профиля
+        }
+
+        public async Task<ClientProfile> GetClientProfileByIdAsync(int id)
+        {
+            return await context.ClientProfiles
+                .Include(cp => cp.User)
+                .FirstOrDefaultAsync(cp => cp.Id == id);
         }
     }
 
