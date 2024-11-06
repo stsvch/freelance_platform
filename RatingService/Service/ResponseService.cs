@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using RatingService.Model;
 
 namespace RatingService.Service
@@ -35,6 +36,38 @@ namespace RatingService.Service
 
             return response;
         }
+
+        public async Task<Response> UpdateResponse(Response updatedResponse)
+        {
+            var response = await _context.Responses.FindAsync(updatedResponse.Id);
+            if (response == null)
+            {
+                return null; 
+            }
+
+            response.Message = updatedResponse.Message ?? response.Message;
+            response.Status = updatedResponse.Status ?? response.Status;
+            response.FreelancerId = updatedResponse.FreelancerId != 0 ? updatedResponse.FreelancerId : response.FreelancerId;
+            response.ClientId = updatedResponse.ClientId != 0 ? updatedResponse.ClientId : response.ClientId;
+            response.ProjectId = updatedResponse.ProjectId != 0 ? updatedResponse.ProjectId : response.ProjectId;
+
+            await _context.SaveChangesAsync();
+            return response; 
+        }
+
+        public async Task SendMessage(int freelancerId, int projectId)
+        {
+            var message = new
+            {
+                Action = "Accept",
+                CorrelationId = Guid.NewGuid().ToString(),
+                ProjectId = projectId,
+                FreelancerId = freelancerId
+            };
+
+            await _rabbitMqService.PublishAsync("ResponseQueue", JsonConvert.SerializeObject(message));
+        }
+
         public async Task Delete(int responseId)
         {
             var response = await _context.Responses.FindAsync(responseId);
@@ -44,11 +77,10 @@ namespace RatingService.Service
                 await _context.SaveChangesAsync();
             }
         }
-        public void StartListeningForProjectCreated()
+
+        internal async Task<Response> GetResponseById(int id)
         {
-            _rabbitMqService.ListenForMessages("ProjectCreatedQueue", async (message) =>
-            {
-            });
+            return await _context.Responses.FindAsync(id);
         }
     }
 }

@@ -1,0 +1,19 @@
+﻿@model int
+
+@{
+    ViewData["Title"] = "Создать отклик";
+}
+
+<h2>Создать отклик для проекта</h2>
+
+<form asp-action="CreateResponse" method="post">
+    <input type="hidden" name="ProjectId" value="@Model" />
+
+    <div class="form-group">
+        <label for="Message">Сообщение</label>
+        <textarea class="form-control" id="Message" name="Message" rows="4"></textarea>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Создать отклик</button>
+</form>
+

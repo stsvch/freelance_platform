@@ -25,7 +25,7 @@ builder.Services.AddSingleton<IConnectionFactory>(sp =>
 // Добавление сервисов
 builder.Services.AddScoped<ReviewService>();
 builder.Services.AddScoped<ResponseService>();
-builder.Services.AddSingleton<RabbitMqService>();
+builder.Services.AddSingleton<IMessageBus, RabbitMqService>();
 
 var app = builder.Build();
 
@@ -33,8 +33,6 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<ReviewDbContext>();
-
-    // Применение миграций (или создание базы данных)
     dbContext.Database.Migrate();
 }
 

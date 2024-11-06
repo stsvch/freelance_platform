@@ -16,47 +16,178 @@ namespace RatingService.Controllers
             _responseService = responseService;
         }
 
-        [HttpGet("{clientId}")]
-        public async Task<IActionResult> GetResponse(int clientId)
+        [HttpGet("client/{clientId}")]
+        public async Task<IActionResult> GetClientResponse(int clientId)
         {
-            var response = await _responseService.GetClientResponse(clientId);
-            if (response == null) 
+            if (clientId <= 0)
             {
-                return NotFound();
+                return BadRequest("Invalid client ID.");
             }
-            return Ok(response);
+
+            try
+            {
+                var response = await _responseService.GetClientResponse(clientId);
+                if (response == null)
+                {
+                    return NotFound("No response found for the specified client.");
+                }
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "An error occurred while retrieving the client's response.");
+            }
         }
 
-        [HttpGet("{projectId}")]
+        [HttpGet("freelancer/{freelancerId}")]
+        public async Task<IActionResult> GetFreelancerResponse(int freelancerId)
+        {
+            if (freelancerId <= 0)
+            {
+                return BadRequest("Invalid client ID.");
+            }
+
+            try
+            {
+                var response = await _responseService.GetClientResponse(freelancerId);
+                if (response == null)
+                {
+                    return NotFound("No response found for the specified client.");
+                }
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "An error occurred while retrieving the client's response.");
+            }
+        }
+
+        [HttpGet("project/{projectId}")]
         public async Task<IActionResult> GetProjectResponse(int projectId)
         {
-            var projectResponse = await _responseService.GetProjectResponse(projectId);
-            foreach(var response in projectResponse)
+            if (projectId <= 0)
             {
-                await _responseService.Delete(response.Id);
+                return BadRequest("Invalid project ID.");
             }
-            return Ok();
+
+            try
+            {
+                var projectResponses = await _responseService.GetProjectResponse(projectId);
+                if (projectResponses == null || !projectResponses.Any())
+                {
+                    return NotFound("No responses found for the specified project.");
+                }
+
+                foreach (var response in projectResponses)
+                {
+                    await _responseService.Delete(response.Id);
+                }
+
+                return Ok("All responses for the specified project have been deleted.");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "An error occurred while deleting project responses.");
+            }
         }
 
         [HttpPost("create")]
-        public async Task<IActionResult> UpdateResponse(Response response)
+        public async Task<IActionResult> CreateResponse([FromBody] Response response)
         {
-            await _responseService.Create(response);
-            return NoContent();
+            if (response == null)
+            {
+                return BadRequest("Response data is required.");
+            }
+
+            try
+            {
+                await _responseService.CreateResponse(response);
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "An error occurred while creating the response.");
+            }
         }
 
-        [HttpPost("update/{id}")]
-        public async Task<IActionResult> UpdateResponse(int id)
+        [HttpPost("update")]
+        public async Task<IActionResult> UpdateResponse([FromBody] Response response)
         {
-            await _responseService.Update(id);
-            return NoContent();
+            if (response == null || response.Id == 0)
+            {
+                return BadRequest("Valid response data with an ID is required.");
+            }
+
+            try
+            {
+                var existingResponse = await _responseService.GetResponseById(response.Id);
+                if (existingResponse == null)
+                {
+                    return NotFound("Response not found.");
+                }
+
+                await _responseService.UpdateResponse(response);
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "An error occurred while updating the response.");
+            }
+        }
+
+        [HttpPost("accept/{id}")]
+        public async Task<IActionResult> AcceptResponse(int id)
+        {
+            if (id <= 0)
+            {
+                return BadRequest("Invalid response ID.");
+            }
+
+            try
+            {
+                var existingResponse = await _responseService.GetResponseById(id);
+                if (existingResponse == null)
+                {
+                    return NotFound("Response not found.");
+                }
+                await _responseService.SendMessage(existingResponse.FreelancerId, existingResponse.ProjectId);
+                var responses = await _responseService.GetProjectResponse(existingResponse.ProjectId);
+                foreach (var response in responses)
+                {
+                    await _responseService.Delete(response.Id);
+                }
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "An error occurred while deleting the response.");
+            }
         }
 
         [HttpPost("delete/{id}")]
         public async Task<IActionResult> DeleteResponse(int id)
         {
-            await _responseService.Delete(id);
-            return NoContent();
+            if (id <= 0)
+            {
+                return BadRequest("Invalid response ID.");
+            }
+
+            try
+            {
+                var existingResponse = await _responseService.GetResponseById(id);
+                if (existingResponse == null)
+                {
+                    return NotFound("Response not found.");
+                }
+
+                await _responseService.Delete(id);
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "An error occurred while deleting the response.");
+            }
         }
     }
+
 }

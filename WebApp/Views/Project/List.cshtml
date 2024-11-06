@@ -26,9 +26,9 @@
                         <p><strong>Бюджет:</strong> @project.Budget руб.</p>
                         <p><strong>Создано:</strong> @project.CreatedAt?.ToString("dd.MM.yyyy")</p>
                         <p><strong>Обновлено:</strong> @project.UpdatedAt?.ToString("dd.MM.yyyy")</p>
-                        <form asp-action="Response" method="post">
-                            <input type="hidden" asp-for="@project.Id" />
-                            <button type="submit" class="btn btn-primary">Откликнутся</button>
+                        <form asp-action="Create" asp-controller="Response" method="get">
+                            <input type="hidden" name="projectId" value="@project.Id" />
+                            <button type="submit" class="btn btn-primary">Откликнуться</button>
                         </form>
 
                     </div>

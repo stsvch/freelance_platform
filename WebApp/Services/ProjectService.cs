@@ -80,7 +80,7 @@ namespace WebApp.Services
                 Budget = project.Budget,
                 Description = project.Description,
                 CorrelationId = correlationId,
-
+                Status = project.Status
             });
 
             _rabbitMqService.PublishMessage("ProjectQueue", message, correlationId);

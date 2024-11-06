@@ -11,10 +11,12 @@ namespace WebApp.Controllers
     public class ProfileController : Controller
     {
         private readonly ProfileService _profileService;
+        private readonly ReviewService _reviewService;
 
-        public ProfileController(ProfileService profileService)
+        public ProfileController(ProfileService profileService, ReviewService reviewService)
         {
             _profileService = profileService;
+            _reviewService = reviewService;
         }
 
         [HttpGet]

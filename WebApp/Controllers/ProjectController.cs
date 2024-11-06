@@ -86,6 +86,16 @@ namespace WebApp.Controllers
             return RedirectToAction("Index");
         }
 
+        [HttpPost("submit")]
+        public async Task<IActionResult> SubmitProject(int id)
+        {
+            var project = await _projectService.GetProject(id);
+            project.Status = "Finished";
+            await _projectService.Update(id, project);
+
+            return RedirectToAction("Index");
+        }
+
         [HttpPost("delete")]
         public async Task<IActionResult> DeleteProject(int id)
         {

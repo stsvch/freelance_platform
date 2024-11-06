@@ -12,6 +12,7 @@ namespace ProjectManagementService.Service
         Task UpdateProjectAsync(dynamic projectMessage);
         Task DeleteProjectAsync(dynamic projectMessage);
         Task HandleProjectMessage(string message);
+        Task HandleResponseMessage(string message);
     }
     public class ProjectService : IProjectService
     {
@@ -32,6 +33,14 @@ namespace ProjectManagementService.Service
                 {
                     var projectService = scope.ServiceProvider.GetRequiredService<IProjectService>();
                     await projectService.HandleProjectMessage(message);
+                }
+            });
+            _messageBus.ListenForMessages("ResponseQueue", async message =>
+            {
+                using (var scope = _serviceProvider.CreateScope())
+                {
+                    var projectService = scope.ServiceProvider.GetRequiredService<IProjectService>();
+                    await projectService.HandleResponseMessage(message);
                 }
             });
         }
@@ -67,6 +76,49 @@ namespace ProjectManagementService.Service
                 default:
                     Console.WriteLine($"Неизвестное действие: {action}");
                     break;
+            }
+        }
+        public async Task HandleResponseMessage(string message)
+        {
+            var responseMessage = JsonConvert.DeserializeObject<dynamic>(message);
+            var action = responseMessage.Action.ToString();
+
+            switch (action)
+            {
+                case "Accept":
+                    await AcceptAsync(responseMessage);
+                    break;
+                default:
+                    Console.WriteLine($"Неизвестное действие: {action}");
+                    break;
+            }
+        }
+
+        private async Task AcceptAsync(dynamic projectMessage)
+        {
+            using (var scope = _serviceProvider.CreateScope())
+            {
+                var context = scope.ServiceProvider.GetRequiredService<ProjectDbContext>();
+
+                using (var transaction = await context.Database.BeginTransactionAsync())
+                {
+                    try
+                    {
+                        var project = await context.Projects.FindAsync((int)projectMessage.ProjectId);
+                        if (project == null)
+                            throw new Exception("Проект не найден");
+                        project.FreelancerId = projectMessage.FreelancerId;
+
+                        context.Projects.Update(project);
+                        await context.SaveChangesAsync();
+
+                        await transaction.CommitAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        await transaction.RollbackAsync();
+                    }
+                }
             }
         }
 
@@ -149,7 +201,7 @@ namespace ProjectManagementService.Service
                     {
                         int freelancerId = projectMessage.FreelancerId;
                         var projects = await context.Projects
-                                                    .Where(p => p.FreelancerId == freelancerId)
+                                                    .Where(p => p.FreelancerId == freelancerId && p.Status != "Finished")
                                                     .ToListAsync();
 
                         if (projects.Any())
@@ -217,7 +269,7 @@ namespace ProjectManagementService.Service
                     {
                         int clientId = projectMessage.ClientId;
                         var projects = await context.Projects
-                                                    .Where(p => p.ClientId == clientId)
+                                                    .Where(p => p.ClientId == clientId && p.Status != "Finished")
                                                     .ToListAsync();
 
                         if (projects.Any())
@@ -393,7 +445,6 @@ namespace ProjectManagementService.Service
             }
         }
 
-
         public async Task UpdateProjectAsync(dynamic projectMessage)
         {
             using (var scope = _serviceProvider.CreateScope())
@@ -407,7 +458,8 @@ namespace ProjectManagementService.Service
                         var project = await context.Projects.FindAsync((int)projectMessage.ProjectId);
                         if (project == null)
                             throw new Exception("Проект не найден");
-
+                        project.Status = projectMessage.Status ?? project.Status;
+                        project.FreelancerId = projectMessage.FreelancerId?? project.FreelancerId;
                         project.Title = projectMessage.Title ?? project.Title;
                         project.Description = projectMessage.Description ?? project.Description;
                         project.UpdatedAt = DateTime.UtcNow;

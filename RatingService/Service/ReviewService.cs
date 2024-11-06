@@ -21,6 +21,13 @@ namespace RatingService.Service
                 .ToListAsync();
         }
 
+        public async Task<List<Review>> GetProjectReviews(int projectId)
+        {
+            return await _context.Reviews
+                .Where(r => r.ProjectId == projectId)
+                .ToListAsync();
+        }
+
         public async Task<Review> CreateReview(Review review)
         {
             _context.Reviews.Add(review);
@@ -37,11 +44,37 @@ namespace RatingService.Service
                 await _context.SaveChangesAsync();
             }
         }
+
+        public async Task<Review> UpdateReview(Review updatedReview)
+        {
+            var review = await _context.Reviews.FindAsync(updatedReview.Id);
+            if (review == null)
+            {
+                return null; // Если отзыв не найден, возвращаем null
+            }
+
+            // Проверяем каждое поле на null и обновляем только если значение не null
+            review.Comment = updatedReview.Comment ?? review.Comment;
+            review.Rating = updatedReview.Rating ?? review.Rating;
+            review.FreelancerId = updatedReview.FreelancerId != 0 ? updatedReview.FreelancerId : review.FreelancerId;
+            review.ClientId = updatedReview.ClientId != 0 ? updatedReview.ClientId : review.ClientId;
+            review.ProjectId = updatedReview.ProjectId != 0 ? updatedReview.ProjectId : review.ProjectId;
+
+            // Сохраняем изменения
+            await _context.SaveChangesAsync();
+            return review; // Возвращаем обновленный отзыв
+        }
+
         public void StartListeningForProjectCreated()
         {
             _rabbitMqService.ListenForMessages("ProjectCreatedQueue", async (message) =>
             {
             });
+        }
+
+        internal async Task<Review> GetReviewById(int reviewId)
+        {
+            return await _context.Reviews.FindAsync(reviewId);
         }
     }
 }

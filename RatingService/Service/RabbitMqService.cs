@@ -4,39 +4,42 @@ using System.Text;
 
 namespace RatingService.Service
 {
-    public class RabbitMqService
+    public class RabbitMqService : IMessageBus
     {
-        private readonly IConnection _connection;
         private readonly IModel _channel;
 
-        public RabbitMqService(IConnection connection)
+        public RabbitMqService(IModel channel)
         {
-            _connection = connection;
-            _channel = _connection.CreateModel();
+            _channel = channel;
+            _channel.QueueDeclare(queue: "ResponseQueue", durable: false, exclusive: false, autoDelete: false, arguments: null);
         }
 
-        // Метод для отправки сообщений в RabbitMQ
-        public void Publish(string message, string queueName)
+        public async Task PublishAsync(string queueName, string message)
         {
-            _channel.QueueDeclare(queue: queueName, durable: false, exclusive: false, autoDelete: false, arguments: null);
             var body = Encoding.UTF8.GetBytes(message);
-            _channel.BasicPublish(exchange: "", routingKey: queueName, basicProperties: null, body: body);
+
+            _channel.BasicPublish(exchange: "", routingKey: queueName, body: body);
+            await Task.CompletedTask;
         }
 
-        // Метод для прослушивания сообщений RabbitMQ
-        public void ListenForMessages(string queueName, Action<string> onMessageReceived)
-        {
-            _channel.QueueDeclare(queue: queueName, durable: false, exclusive: false, autoDelete: false, arguments: null);
 
+        public void ListenForMessages(string queueName, Func<string, Task> onMessageReceived)
+        {
             var consumer = new EventingBasicConsumer(_channel);
-            consumer.Received += (model, ea) =>
+            consumer.Received += async (model, ea) =>
             {
                 var body = ea.Body.ToArray();
                 var message = Encoding.UTF8.GetString(body);
-                onMessageReceived(message);
+                await onMessageReceived(message);
+                _channel.BasicAck(ea.DeliveryTag, false);
             };
-
-            _channel.BasicConsume(queue: queueName, autoAck: true, consumer: consumer);
+            _channel.BasicConsume(queue: queueName, autoAck: false, consumer: consumer);
         }
+    }
+
+    public interface IMessageBus
+    {
+        Task PublishAsync(string queueName, string message);
+        void ListenForMessages(string queueName, Func<string, Task> onMessageReceived);
     }
 }
