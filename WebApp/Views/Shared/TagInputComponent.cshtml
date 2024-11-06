@@ -1,0 +1,82 @@
+﻿@* TagInputComponent.cshtml *@
+<div>
+    <!-- Поле ввода и кнопка добавления тега -->
+    <input type="text" id="tagInput" placeholder="Исключить слова, через запятую" />
+    <button type="button" onclick="addTag()">Добавить</button>
+
+    <!-- Форма для отправки тегов в контроллер -->
+    <form id="tagsForm" asp-action="Find" asp-controller="Project" method="post">
+        <!-- Скрытое поле для сохранения тегов в виде JSON -->
+        <input type="hidden" id="tagsHiddenInput" name="tags" />
+
+        <div id="tagsContainer"></div>
+
+        <button type="submit" class="btn btn-primary">Отправить теги</button>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        const tagsArray = [];
+
+        function addTag() {
+            const input = document.getElementById("tagInput");
+            const tagsContainer = document.getElementById("tagsContainer");
+
+            const tagText = input.value.trim();
+            if (tagText === "") return;
+
+            tagsArray.push(tagText);
+
+            const tag = document.createElement("div");
+            tag.classList.add("tag");
+
+            const tagLabel = document.createElement("span");
+            tagLabel.innerText = tagText;
+            tag.appendChild(tagLabel);
+
+            const closeButton = document.createElement("button");
+            closeButton.innerText = "x";
+            closeButton.classList.add("close-btn");
+            closeButton.onclick = function () {
+                tagsArray.splice(tagsArray.indexOf(tagText), 1);
+                tag.remove();
+            };
+            tag.appendChild(closeButton);
+
+            tagsContainer.appendChild(tag);
+
+            input.value = "";
+        }
+
+        document.getElementById("tagsForm").onsubmit = function() {
+            document.getElementById("tagsHiddenInput").value = JSON.stringify(tagsArray);
+        };
+    </script>
+
+    <style>
+        #tagsContainer {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 10px;
+        }
+        .tag {
+            display: flex;
+            align-items: center;
+            padding: 5px 10px;
+            background-color: #e0e0e0;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+        .close-btn {
+            background: none;
+            border: none;
+            color: #ff0000;
+            font-size: 16px;
+            margin-left: 8px;
+            cursor: pointer;
+        }
+    </style>
+}
+

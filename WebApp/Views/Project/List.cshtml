@@ -7,7 +7,7 @@
 
 <div class="container mt-4">
     <h2 class="mb-4">Доступные проекты</h2>
-
+    @await Html.PartialAsync("TagInputComponent")
     @if (Model != null && Model.Any())
     {
         <div class="list-group">

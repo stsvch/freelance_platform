@@ -73,11 +73,74 @@ namespace ProjectManagementService.Service
                 case "GetList":
                     await GetProjectListAsync(projectMessage);
                     break;
+                case "Find": 
+                    await FindProject(projectMessage);
+                    break;
                 default:
                     Console.WriteLine($"Неизвестное действие: {action}");
                     break;
             }
         }
+        private async Task FindProject(dynamic message)
+        {
+            using (var scope = _serviceProvider.CreateScope())
+            {
+                string[] tags = message.Tags.ToObject<string[]>();  // Преобразуем динамический список в массив строк
+
+                // Извлекаем correlationId
+                var correlationId = message.CorrelationId.ToString();
+                var context = scope.ServiceProvider.GetRequiredService<ProjectDbContext>();
+
+                using (var transaction = await context.Database.BeginTransactionAsync())
+                {
+                    try
+                    {
+                        // Начинаем с базового запроса
+                        var query = context.Projects.AsQueryable();
+
+                        // Для каждого тега добавляем условие Contains в запрос
+                        query = query.Where(p => tags.All(tag => p.Description.Contains(tag)));
+
+                        // Выполняем запрос
+                        var projects = await query.ToListAsync();
+
+                        if (projects == null || projects.Count == 0)
+                            throw new Exception("Проекты не найдены");
+                        if (projects.Any())
+                        {
+                            var successMessage = new
+                            {
+                                Action = "Find",
+                                Status = "Success",
+                                CorrelationId = message.CorrelationId,
+                                Projects = projects
+                            };
+
+                            await _messageBus.PublishAsync("ProjectResponseQueue", JsonConvert.SerializeObject(successMessage));
+                        }
+                        else
+                        {
+                            var errorMessage = new
+                            {
+                                Action = "GetList",
+                                Status = "Error",
+                                CorrelationId = message.CorrelationId.ToString(),
+                                Message = "Проекты не найдены"
+                            };
+                            await _messageBus.PublishAsync("ProjectResponseQueue", JsonConvert.SerializeObject(errorMessage));
+                        }
+                        await transaction.CommitAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error: {ex.Message}");
+                        await transaction.RollbackAsync();
+                    }
+                }
+            }
+        }
+
+
         public async Task HandleResponseMessage(string message)
         {
             var responseMessage = JsonConvert.DeserializeObject<dynamic>(message);

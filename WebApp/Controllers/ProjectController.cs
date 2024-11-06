@@ -122,5 +122,12 @@ namespace WebApp.Controllers
             List<ProjectModel> model = await _projectService.GetList();
             return View(model);
         }
+
+        [HttpPost("find")]
+        public async Task<IActionResult> Find([FromForm] string[] tags)
+        {
+            var model = await _projectService.Find(tags);
+            return View("List", model);
+        }
     }
 }

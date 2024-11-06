@@ -63,10 +63,30 @@ namespace WebApp.Services
                 FreelancerId = (int?)null,
                 CorrelationId = correlationId
             });
-            Console.WriteLine(correlationId);
             _rabbitMqService.PublishMessage("ProjectQueue", message, correlationId);
 
             var responseMessage = await _rabbitMqService.GetAndRemoveMessage(correlationId);
+        }
+
+        public async Task<List<ProjectModel>> Find(string[] tags)
+        {
+            var correlationId = Guid.NewGuid().ToString();
+            var message = JsonConvert.SerializeObject(new
+            {
+                Action = "Find",
+                Tags = tags,
+                CorrelationId = correlationId
+            });
+            _rabbitMqService.PublishMessage("ProjectQueue", message, correlationId);
+            var responseMessage = await _rabbitMqService.GetAndRemoveMessage(correlationId);
+            var response = JsonConvert.DeserializeObject<dynamic>(responseMessage);
+
+            if (response.Status == "Success")
+            {
+                return (List<ProjectModel>)response.Projects;
+
+            }
+            return null;
         }
 
         public async Task Update(int id, ProjectModel project)
