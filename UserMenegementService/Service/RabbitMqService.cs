@@ -6,41 +6,53 @@ using System.Text;
 
 namespace UserMenegementService.Service
 {
-    public class RabbitMqService
+    public class RabbitMqService : IMessageBus
     {
-        private readonly IConnection _connection;
         private readonly IModel _channel;
+        private readonly IServiceScopeFactory _scopeFactory;
 
-        public RabbitMqService(IConnection connection)
+        public RabbitMqService(IModel channel, IServiceScopeFactory scopeFactory)
         {
-            _connection = connection;
-            _channel = _connection.CreateModel();
+            _channel = channel;
+            _channel.QueueDeclare(queue: "UserNotificationQueue", durable: false, exclusive: false, autoDelete: false, arguments: null);
+            _channel.QueueDeclare(queue: "NotificationUserQueue", durable: false, exclusive: false, autoDelete: false, arguments: null);
+            _scopeFactory = scopeFactory;
         }
 
-        // Метод для отправки сообщений в RabbitMQ
-        public async Task PublishMessageAsync(object message, string queueName)
+        public async Task PublishAsync(string queueName, string message)
         {
-            var jsonMessage = JsonConvert.SerializeObject(message);
-            var body = Encoding.UTF8.GetBytes(jsonMessage);
+            var body = Encoding.UTF8.GetBytes(message);
 
-            _channel.BasicPublish(exchange: "", routingKey: queueName, basicProperties: null, body: body);
+            _channel.BasicPublish(exchange: "", routingKey: queueName, body: body);
+            await Task.CompletedTask;
         }
 
-        // Метод для прослушивания очередей RabbitMQ
-        public void ListenForMessages(string queueName, Action<string> onMessageReceived)
+
+        public void ListenForMessages(string queueName)
         {
-            _channel.QueueDeclare(queue: queueName, durable: false, exclusive: false, autoDelete: false, arguments: null);
             var consumer = new EventingBasicConsumer(_channel);
-
-            consumer.Received += (model, ea) =>
+            consumer.Received += async (model, ea) =>
             {
                 var body = ea.Body.ToArray();
                 var message = Encoding.UTF8.GetString(body);
-                onMessageReceived(message);
+
+                // Создаем область для Scoped-сервиса
+                using (var scope = _scopeFactory.CreateScope())
+                {
+                    var userService = scope.ServiceProvider.GetRequiredService<IUserService>();
+                    await userService.Handle(message); // Вызываем метод-обработчик
+                }
+
+                _channel.BasicAck(ea.DeliveryTag, false);
             };
 
-            _channel.BasicConsume(queue: queueName, autoAck: true, consumer: consumer);
+            _channel.BasicConsume(queue: queueName, autoAck: false, consumer: consumer);
         }
     }
 
+    public interface IMessageBus
+    {
+        Task PublishAsync(string queueName, string message);
+        void ListenForMessages(string queueName);
+    }
 }

@@ -23,7 +23,7 @@ namespace ProjectManagementService.Service
         {
             _channel = channel;
             _channel.QueueDeclare(queue: "ProjectQueue", durable: false, exclusive: false, autoDelete: false, arguments: null);
-            _channel.QueueDeclare(queue: "ResponseQueue", durable: false, exclusive: false, autoDelete: false, arguments: null);
+            _channel.QueueDeclare(queue: "ResponseToProjectQueue", durable: false, exclusive: false, autoDelete: false, arguments: null);
             _channel.QueueDeclare(queue: "ProjectResponseQueue", durable: false, exclusive: false, autoDelete: false, arguments: null);
         }
 

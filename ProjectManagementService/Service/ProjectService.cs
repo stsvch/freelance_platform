@@ -35,7 +35,7 @@ namespace ProjectManagementService.Service
                     await projectService.HandleProjectMessage(message);
                 }
             });
-            _messageBus.ListenForMessages("ResponseQueue", async message =>
+            _messageBus.ListenForMessages("ResponseToProjectQueue", async message =>
             {
                 using (var scope = _serviceProvider.CreateScope())
                 {

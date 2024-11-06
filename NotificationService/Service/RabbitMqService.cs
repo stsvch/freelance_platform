@@ -6,35 +6,43 @@ using NotificationService.Model;
 
 namespace NotificationService.Service
 {
-    public class RabbitMqService
+    public interface IMessageBus
     {
-        private readonly IConnection _connection;
-        private readonly EmailService _emailService;
+        Task PublishAsync(string queueName, string message);
+        void ListenForMessages(string queueName, Func<string, Task> onMessageReceived);
+    }
+    public class RabbitMqService:IMessageBus
+    {
+        private readonly IModel _channel;
 
-        public RabbitMqService(IConnection connection, EmailService emailService)
+        public RabbitMqService(IModel channel)
         {
-            _connection = connection;
-            _emailService = emailService;
+            _channel = channel;
+            _channel.QueueDeclare(queue: "UserNotificationQueue", durable: false, exclusive: false, autoDelete: false, arguments: null);
+            _channel.QueueDeclare(queue: "NotificationUserQueue", durable: false, exclusive: false, autoDelete: false, arguments: null);
+            _channel.QueueDeclare(queue: "ResponseToNotificationQueue", durable: false, exclusive: false, autoDelete: false, arguments: null);
         }
 
-        public void ListenForMessages()
+        public async Task PublishAsync(string queueName, string message)
         {
-            using var channel = _connection.CreateModel();
-            channel.QueueDeclare(queue: "notificationQueue", durable: false, exclusive: false, autoDelete: false, arguments: null);
-            var consumer = new EventingBasicConsumer(channel);
+            var body = Encoding.UTF8.GetBytes(message);
 
+            _channel.BasicPublish(exchange: "", routingKey: queueName, body: body);
+            await Task.CompletedTask;
+        }
+
+
+        public void ListenForMessages(string queueName, Func<string, Task> onMessageReceived)
+        {
+            var consumer = new EventingBasicConsumer(_channel);
             consumer.Received += async (model, ea) =>
             {
                 var body = ea.Body.ToArray();
                 var message = Encoding.UTF8.GetString(body);
-                var notification = JsonSerializer.Deserialize<Notification>(message);
-                if (notification != null)
-                {
-                    await _emailService.SendEmailAsync(notification);
-                }
+                await onMessageReceived(message);
+                _channel.BasicAck(ea.DeliveryTag, false);
             };
-
-            channel.BasicConsume(queue: "notificationQueue", autoAck: true, consumer: consumer);
+            _channel.BasicConsume(queue: queueName, autoAck: false, consumer: consumer);
         }
     }
 }

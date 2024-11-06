@@ -65,7 +65,7 @@ namespace RatingService.Service
                 FreelancerId = freelancerId
             };
 
-            await _rabbitMqService.PublishAsync("ResponseQueue", JsonConvert.SerializeObject(message));
+            await _rabbitMqService.PublishAsync(JsonConvert.SerializeObject(message));
         }
 
         public async Task Delete(int responseId)

@@ -65,13 +65,6 @@ namespace RatingService.Service
             return review; // Возвращаем обновленный отзыв
         }
 
-        public void StartListeningForProjectCreated()
-        {
-            _rabbitMqService.ListenForMessages("ProjectCreatedQueue", async (message) =>
-            {
-            });
-        }
-
         internal async Task<Review> GetReviewById(int reviewId)
         {
             return await _context.Reviews.FindAsync(reviewId);

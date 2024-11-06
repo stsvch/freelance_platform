@@ -7,6 +7,7 @@ using System.Text;
 using System.Collections.Generic;
 using System.Security.Claims;
 using Newtonsoft.Json;
+using System.Diagnostics;
 
 namespace UserMenegementService.Service
 {
@@ -14,14 +15,17 @@ namespace UserMenegementService.Service
     {
         Task<User> AuthenticateUserAsync(string username, string password);
         Task<User> RegisterUserAsync(UserRegister registerModel);
+        Task Handle(dynamic message);
     }
     public class UserService : IUserService
     {
         private readonly UserDbContext _context;
+        private readonly RabbitMqService _rabbitMqService;
 
-        public UserService(UserDbContext context)
+        public UserService(UserDbContext context, RabbitMqService rabbitMqService)
         {
             _context = context;
+            _rabbitMqService = rabbitMqService;
         }
 
         public async Task<User> AuthenticateUserAsync(string email, string password)
@@ -37,6 +41,64 @@ namespace UserMenegementService.Service
             }
             return user;
         }
+
+        public async Task Handle(dynamic message)
+        {
+            var userMessage = JsonConvert.DeserializeObject<dynamic>(message);
+            var action = userMessage.Action.ToString();
+
+            switch (action)
+            {
+                case "GetFreelancerMail":
+                    {
+                        var mail = await GetFreelancerMail(userMessage.FreelancerId);
+                        var response = new
+                        {
+                            Action = "GetFreelancerMail",
+                            Mail = mail,
+                            CorrelationId = userMessage.CorrelationId
+                        };
+                        await _rabbitMqService.PublishAsync("UserNotificationQueue", JsonConvert.SerializeObject(response));
+                    }
+                    break;
+                case "GetClientMail":
+                    {
+                        var mail = await GetClientMail(userMessage.ClientId);
+                        var response = new
+                        {
+                            Action = "GetClientMail",
+                            Mail = mail,
+                            CorrelationId = userMessage.CorrelationId
+                        };
+                        await _rabbitMqService.PublishAsync("UserNotificationQueue", JsonConvert.SerializeObject(response));
+                    }
+                    break;
+
+            }
+        }
+
+        public async Task<string> GetClientMail(int clientId)
+        {
+            // Ищем пользователя по ClientId и возвращаем его почту
+            var userEmail = await _context.Users
+                .Where(u => u.ClientProfile.Id == clientId)
+                .Select(u => u.Email)
+                .FirstOrDefaultAsync();
+
+            return userEmail; // Вернет email или null, если пользователь с таким ClientId не найден
+        }
+
+        public async Task<string> GetFreelancerMail(int freelancerId)
+        {
+            // Ищем пользователя по FreelancerId и возвращаем его почту
+            var userEmail = await _context.Users
+                .Where(u => u.FreelancerProfile.Id == freelancerId)
+                .Select(u => u.Email)
+                .FirstOrDefaultAsync();
+
+            return userEmail; // Вернет email или null, если пользователь с таким FreelancerId не найден
+        }
+
 
         public async Task<User> RegisterUserAsync(UserRegister registerModel)
         {

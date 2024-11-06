@@ -35,11 +35,11 @@ builder.Services.AddSingleton<IModel>(sp =>
 
 builder.Services.AddSession(options =>
 {
-    options.IdleTimeout = TimeSpan.FromMinutes(30); // Время жизни сессии
+    options.IdleTimeout = TimeSpan.FromMinutes(30); 
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
 });
-// Настроим RabbitMqService для работы с RabbitMQ
+
 builder.Services.AddSingleton<RabbitMqService>();
 builder.Services.AddSingleton<ProjectService>();
 builder.Services.AddSingleton<ProfileService>(); // или AddScoped<ProfileService>()
@@ -50,7 +50,6 @@ builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
 
-// Запуск прослушивания сообщений из очереди RabbitMQ
 var rabbitMqService = app.Services.GetRequiredService<RabbitMqService>();
 _ = rabbitMqService.ListenForMessagesAsync("ProjectResponseQueue");
 

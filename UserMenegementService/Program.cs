@@ -63,18 +63,8 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<IJwtService, JwtService>();
 
 var app = builder.Build();
-/*
-
-// Запуск прослушивания RabbitMQ сообщений в фоне
-using (var scope = app.Services.CreateScope())
-{
-    var userService = scope.ServiceProvider.GetRequiredService<IUserService>();
-
-    // Запуск подписки на сообщения RabbitMQ
-    Task.Run(() => userService.ListenForUserRegistrationMessages());
-    Task.Run(() => userService.ListenForUserLoginMessages());
-}
-*/
+var rabbitMqService = app.Services.GetRequiredService<RabbitMqService>();
+rabbitMqService.ListenForMessages("NotificationUserQueue");
 
 // Применение миграций при запуске приложения
 using (var scope = app.Services.CreateScope())
