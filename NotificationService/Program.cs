@@ -17,12 +17,18 @@ builder.Services.AddSingleton<IConnectionFactory>(sp =>
 
 // Настройка сервиса электронной почты
 builder.Services.AddSingleton<EmailService>();
+builder.Services.AddSingleton<NotificationService.Service.NotificationService>();
 
 var app = builder.Build();
 
-// Запуск прослушивания сообщений RabbitMQ в отдельном потоке
-var rabbitMqService = app.Services.GetRequiredService<RabbitMqService>();
-rabbitMqService.ListenForMessages();
+using (var scope = app.Services.CreateScope())
+{
+    var projectService = scope.ServiceProvider.GetRequiredService<NotificationService.Service.NotificationService>();
+    if (projectService is NotificationService.Service.NotificationService service)
+    {
+        service.StartListeningForMessages(); // Начинаем прослушивание сообщений
+    }
+}
 
 // Добавьте маршрутизацию
 app.UseRouting();

@@ -102,6 +102,7 @@ namespace RatingService.Controllers
             try
             {
                 await _responseService.CreateResponse(response);
+                await _responseService.SendCreateMessage(response.ClientId);
                 return Ok(response);
             }
             catch (Exception ex)
@@ -150,7 +151,7 @@ namespace RatingService.Controllers
                 {
                     return NotFound("Response not found.");
                 }
-                await _responseService.SendMessage(existingResponse.FreelancerId, existingResponse.ProjectId);
+                await _responseService.SendAcceptMessage(existingResponse.FreelancerId, existingResponse.ProjectId);
                 var responses = await _responseService.GetProjectResponse(existingResponse.ProjectId);
                 foreach (var response in responses)
                 {

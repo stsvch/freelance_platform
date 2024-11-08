@@ -55,7 +55,7 @@ namespace RatingService.Service
             return response; 
         }
 
-        public async Task SendMessage(int freelancerId, int projectId)
+        public async Task SendAcceptMessage(int freelancerId, int projectId)
         {
             var message = new
             {
@@ -63,6 +63,18 @@ namespace RatingService.Service
                 CorrelationId = Guid.NewGuid().ToString(),
                 ProjectId = projectId,
                 FreelancerId = freelancerId
+            };
+
+            await _rabbitMqService.PublishAsync(JsonConvert.SerializeObject(message));
+        }
+
+        public async Task SendCreateMessage(int clientId)
+        {
+            var message = new
+            {
+                Action = "CreateResponse",
+                CorrelationId = Guid.NewGuid().ToString(),
+                ClientId = clientId
             };
 
             await _rabbitMqService.PublishAsync(JsonConvert.SerializeObject(message));
