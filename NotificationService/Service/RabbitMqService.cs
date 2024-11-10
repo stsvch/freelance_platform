@@ -11,13 +11,13 @@ namespace NotificationService.Service
         Task PublishAsync(string queueName, string message);
         void ListenForMessages(string queueName, Func<string, Task> onMessageReceived);
     }
-    public class RabbitMqService:IMessageBus
+    public class RabbitMqService : IMessageBus
     {
         private readonly IModel _channel;
 
-        public RabbitMqService(IModel channel)
+        public RabbitMqService(IConnection connection)
         {
-            _channel = channel;
+            _channel = connection.CreateModel();
             _channel.QueueDeclare(queue: "UserNotificationQueue", durable: false, exclusive: false, autoDelete: false, arguments: null);
             _channel.QueueDeclare(queue: "NotificationUserQueue", durable: false, exclusive: false, autoDelete: false, arguments: null);
             _channel.QueueDeclare(queue: "ResponseToNotificationQueue", durable: false, exclusive: false, autoDelete: false, arguments: null);
@@ -26,11 +26,9 @@ namespace NotificationService.Service
         public async Task PublishAsync(string queueName, string message)
         {
             var body = Encoding.UTF8.GetBytes(message);
-
             _channel.BasicPublish(exchange: "", routingKey: queueName, body: body);
             await Task.CompletedTask;
         }
-
 
         public void ListenForMessages(string queueName, Func<string, Task> onMessageReceived)
         {

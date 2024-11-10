@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Security.Claims;
 using Newtonsoft.Json;
 using System.Diagnostics;
+using Org.BouncyCastle.Utilities;
 
 namespace UserMenegementService.Service
 {
@@ -51,7 +52,7 @@ namespace UserMenegementService.Service
             {
                 case "GetFreelancerMail":
                     {
-                        var mail = await GetFreelancerMail(userMessage.FreelancerId);
+                        var mail = await GetFreelancerMail(Convert.ToInt32(userMessage.FreelancerId));
                         var response = new
                         {
                             Action = "GetFreelancerMail",
@@ -63,7 +64,7 @@ namespace UserMenegementService.Service
                     break;
                 case "GetClientMail":
                     {
-                        var mail = await GetClientMail(userMessage.ClientId);
+                        var mail = await GetClientMail(Convert.ToInt32(userMessage.ClientId));
                         var response = new
                         {
                             Action = "GetClientMail",

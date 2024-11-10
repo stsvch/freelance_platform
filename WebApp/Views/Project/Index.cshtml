@@ -1,5 +1,5 @@
 ﻿@model IEnumerable<ProjectModel>
-@using Microsoft.AspNetCore.Http; <!-- Убедитесь, что пространство имен подключено -->
+@using Microsoft.AspNetCore.Http;
 @{
     var userId = Context.Session.GetString("UserId");
     var role = ViewData["Role"] as string;
@@ -13,34 +13,39 @@
         <div class="list-group">
             @foreach (var project in Model)
             {
-                <div class="list-group-item">
+                <div class="list-group-item mb-4">
                     <div class="d-flex justify-content-between">
                         <h5 class="mb-1">@project.Title</h5>
-                        <!-- Кнопка для раскрытия информации -->
                         <button class="btn btn-link" type="button" onclick="toggleProjectDetails(@project.Id)">
                             Подробнее
                         </button>
                     </div>
 
-                    <!-- Скрытая информация о проекте -->
                     <div id="projectDetails-@project.Id" style="display:none;" class="project-details mt-3">
-                        <p><strong>Описание:</strong> @project.Description</p>
-                        <p><strong>Бюджет:</strong> @project.Budget руб.</p>
-                        <p><strong>Создано:</strong> @project.CreatedAt?.ToString("dd.MM.yyyy")</p>
-                        <p><strong>Обновлено:</strong> @project.UpdatedAt?.ToString("dd.MM.yyyy")</p>
+                        <p class="mb-2"><strong>Описание:</strong> @project.Description</p>
+                        <p class="mb-2"><strong>Бюджет:</strong> @project.Budget руб.</p>
+                        <p class="mb-2"><strong>Создано:</strong> @project.CreatedAt?.ToString("dd.MM.yyyy")</p>
+                        <p class="mb-2"><strong>Обновлено:</strong> @project.UpdatedAt?.ToString("dd.MM.yyyy")</p>
+
                         @if (role == "Client")
                         {
-                            <a href="@Url.Action("Update", "Project", new { id = project.Id })" class="btn btn-secondary">Редактировать</a>
-                            <a href="@Url.Action("Delete", "Project", new { id = project.Id })" class="btn btn-danger">Удалить</a>
+                            @if (project.Status == "Finished")
+                            {
+                                <a href="@Url.Action("Create", "Review", new { id = project.FreelancerId })" class="btn btn-danger me-2">Оставить отзыв</a>
+                            }else
+                            {
+                                <a href="@Url.Action("Update", "Project", new { id = project.Id })" class="btn btn-secondary me-2">Редактировать</a>
+                                <a href="@Url.Action("Delete", "Project", new { id = project.Id })" class="btn btn-danger me-2">Удалить</a>
+                            }
                         }
                         else if (role == "Freelancer")
                         {
-                            <!-- Дополнительные действия для фрилансера -->
                             <a href="@Url.Action("SubmitWork", "Projects", new { id = project.Id })" class="btn btn-success">Отправить работу</a>
                         }
                     </div>
                 </div>
             }
+
         </div>
     }
     else
@@ -60,7 +65,6 @@
 
 </div>
 
-<!-- Скрипт для раскрытия и скрытия деталей проекта -->
 <script>
     function toggleProjectDetails(projectId) {
         var details = document.getElementById('projectDetails-' + projectId);

@@ -3,41 +3,40 @@ using MailKit.Security;
 using MimeKit;
 using Newtonsoft.Json;
 using NotificationService.Model;
+using System.Text.Json;
 
 namespace NotificationService.Service
 {
-    public class NotificationService
+    public class NotifyService
     {
         private readonly EmailService _emailService;
         private readonly RabbitMqService _rabbitMqService;
-        private readonly IServiceProvider _serviceProvider;
         private readonly Dictionary<string, string> _pendingMessages = new();
 
-        public NotificationService(EmailService emailService, RabbitMqService rabbitMqService, IServiceProvider serviceProvider)
+        public NotifyService(EmailService emailService, RabbitMqService rabbitMqService)
         {
             _emailService = emailService;
             _rabbitMqService = rabbitMqService;
-            _serviceProvider = serviceProvider;
         }
 
         public void StartListeningForMessages()
         {
-            _rabbitMqService.ListenForMessages("ResponseToNotificationQueue", async message =>
+            try
             {
-                using (var scope = _serviceProvider.CreateScope())
+                _rabbitMqService.ListenForMessages("ResponseToNotificationQueue", async message =>
                 {
-                    var projectService = scope.ServiceProvider.GetRequiredService<NotificationService>();
-                    await projectService.HandleResponseMessage(message);
-                }
-            });
-            _rabbitMqService.ListenForMessages("UserNotificationQueue", async message =>
+                    await HandleResponseMessage(message);
+                });
+
+                _rabbitMqService.ListenForMessages("UserNotificationQueue", async message =>
+                {
+                    await SaveMessage(message);
+                });
+            }
+            catch (Exception ex)
             {
-                using (var scope = _serviceProvider.CreateScope())
-                {
-                    var projectService = scope.ServiceProvider.GetRequiredService<NotificationService>();
-                    await projectService.SaveMessage(message);
-                }
-            });
+                Console.WriteLine($"Error while starting message listeners: {ex.Message}");
+            }
         }
 
         public async Task HandleResponseMessage(string message)
@@ -61,27 +60,29 @@ namespace NotificationService.Service
 
         private async Task CreateResponseAsync(dynamic projectMessage)
         {
-            var clientId = (int)projectMessage.ClientId;
-            var mail = await GetFreelancerMail(clientId);
+            var client = projectMessage.ClientId;
+            var mail = await GetClientMail(Convert.ToInt32(client));
             await SendEmailAsync(mail, "Create");
         }
 
         private async Task AcceptAsync(dynamic projectMessage)
         {
-            var freelancerId = (int)projectMessage.FreelancerId;
-            var mail = await GetFreelancerMail(freelancerId);
+            var freelancerId = projectMessage.FreelancerId;
+            var mail = await GetFreelancerMail(Convert.ToInt32(freelancerId));
             await SendEmailAsync(mail, "Accept");
         }
 
         public async Task<string> GetAndRemoveMessage(string correlationId)
         {
-            await Task.Delay(500);
+            await Task.Delay(1500);
             if (_pendingMessages.TryGetValue(correlationId, out var message))
             {
                 _pendingMessages.Remove(correlationId);
-                return message; 
+                using JsonDocument document = JsonDocument.Parse(message);
+                string mail = document.RootElement.GetProperty("Mail").GetString();
+                return mail;
             }
-            return null; 
+            return null;
         }
 
         public async Task SaveMessage(string message)
@@ -109,7 +110,7 @@ namespace NotificationService.Service
             var correlationId = Guid.NewGuid().ToString();
             var message = new
             {
-                Action = "GetClientMail",
+                Action = "GetFreelancerMail",
                 CorrelationId = correlationId,
                 FreelancerId = freelancerId
             };
@@ -120,7 +121,7 @@ namespace NotificationService.Service
         public async Task SendEmailAsync(string mail, string message)
         {
             Notification notification = new Notification()
-            { 
+            {
                 To = mail,
                 Message = message,
                 Subject = "Response"

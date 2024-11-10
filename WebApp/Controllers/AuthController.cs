@@ -105,7 +105,7 @@ namespace WebApp.Controllers
                 message = JsonConvert.SerializeObject(new
                 {
                     Username = model.Username,
-                    PasswordHash = HashPassword.Hash(model.PasswordHash),  // Пароль передается без хеширования
+                    PasswordHash = HashPassword.Hash(model.PasswordHash), 
                     Email = model.Email,
                     Role = model.Role,
                     Skills = model.Skills,
@@ -124,7 +124,6 @@ namespace WebApp.Controllers
                 var contentResponse = await response.Content.ReadAsStringAsync();
                 var responseData = JsonConvert.DeserializeObject<dynamic>(contentResponse);
 
-                // Извлекаем ID пользователя из ответа
                 string userId = responseData?.userId?.ToString();
                 string role = responseData?.role?.ToString();
                 string id = responseData?.id?.ToString();

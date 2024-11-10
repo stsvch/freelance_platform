@@ -1,12 +1,9 @@
 ﻿@* TagInputComponent.cshtml *@
 <div>
-    <!-- Поле ввода и кнопка добавления тега -->
     <input type="text" id="tagInput" placeholder="Исключить слова, через запятую" />
     <button type="button" onclick="addTag()">Добавить</button>
 
-    <!-- Форма для отправки тегов в контроллер -->
     <form id="tagsForm" asp-action="Find" asp-controller="Project" method="post">
-        <!-- Скрытое поле для сохранения тегов в виде JSON -->
         <input type="hidden" id="tagsHiddenInput" name="tags" />
 
         <div id="tagsContainer"></div>

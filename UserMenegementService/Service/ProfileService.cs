@@ -19,23 +19,10 @@ namespace UserMenegementService.Service
     public class ProfileService : IProfileService
     {
         private readonly UserDbContext context;
-        private readonly IMessageBus _messageBus;
 
-        public ProfileService(UserDbContext context, IMessageBus messageBus)
+        public ProfileService(UserDbContext context)
         {
             this.context = context;
-            _messageBus = messageBus;
-        }
-        public void StartListeningForMessages()
-        {
-            _messageBus.ListenForMessages("ProjectQueue", async message =>
-            {
-                using (var scope = _serviceProvider.CreateScope())
-                {
-                    var projectService = scope.ServiceProvider.GetRequiredService<IProjectService>();
-                    await projectService.HandleProjectMessage(message);
-                }
-            });
         }
         public async Task<FreelancerProfile> GetFreelancerProfileAsync(int userId)
         {

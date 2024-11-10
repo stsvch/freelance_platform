@@ -16,32 +16,33 @@
             @foreach (var response in Model.Responses)
             {
                 var project = Model.Projects.FirstOrDefault(p => p.Id == response.ProjectId);
-                var projectName = project != null ? project.Title : "Неизвестный проект"; // Или какое-то другое значение по умолчанию
+                var projectName = project != null ? project.Title : "Неизвестный проект";
 
-                <div class="list-group-item">
-                    <h5>Проект: @projectName (ID: @response.ProjectId)</h5>
+                <div class="list-group-item mb-3">
+                    <h5>Проект: @projectName</h5>
                     <p>Сообщение: @response.Message</p>
                     <p>Статус: @response.Status</p>
 
                     @if (role == "Client")
                     {
-                        <form asp-action="Cancel" asp-route-id="@response.Id" method="post">
-                            <button type="submit" class="btn btn-danger">Отклонить</button>
-                        </form>
-                        <form asp-action="Accept" asp-route-id="@response.Id" method="post" class="d-inline">
-                            <button type="submit" class="btn btn-success">Одобрить</button>
-                        </form>
-
+                        <div class="d-inline-flex align-items-center">
+                            <form asp-action="Cancel" asp-route-id="@response.Id" method="post" class="d-inline">
+                                <button type="submit" class="btn btn-danger mx-1">Отклонить</button>
+                            </form>
+                            <form asp-action="Accept" asp-route-id="@response.Id" method="post" class="d-inline">
+                                <button type="submit" class="btn btn-success mx-1">Одобрить</button>
+                            </form>
+                        </div>
                     }
                     else if (role == "Freelancer")
                     {
-
                         <form asp-action="Cancel" asp-route-id="@response.Id" method="post" class="d-inline">
                             <button type="submit" class="btn btn-warning">Отменить отклик</button>
                         </form>
                     }
                 </div>
             }
+
         </div>
     }
     else

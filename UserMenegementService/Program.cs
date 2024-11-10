@@ -21,12 +21,20 @@ builder.Services.AddSingleton<IConnection>(sp =>
     return factory.CreateConnection();
 });
 
+// Регистрация канала RabbitMQ (IModel)
+builder.Services.AddSingleton<IModel>(sp =>
+{
+    var connection = sp.GetRequiredService<IConnection>();
+    return connection.CreateModel(); // создаем канал (IModel)
+});
+
 // Сервис для RabbitMQ
 builder.Services.AddSingleton<RabbitMqService>();
 
 // Регистрация сервисов для работы с пользователями и профилями
 builder.Services.AddScoped<IUserService, UserService>();  // Используйте интерфейс IUserService
 builder.Services.AddScoped<IProfileService, ProfileService>();
+builder.Services.AddScoped<IMessageBus, RabbitMqService>();  // Регистрация IMessageBus, если его нет
 
 // Настройка базы данных MySQL
 builder.Services.AddDbContext<UserDbContext>(options =>
@@ -63,6 +71,8 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<IJwtService, JwtService>();
 
 var app = builder.Build();
+
+// Настройка RabbitMqService для прослушивания сообщений
 var rabbitMqService = app.Services.GetRequiredService<RabbitMqService>();
 rabbitMqService.ListenForMessages("NotificationUserQueue");
 
@@ -92,6 +102,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.Run();
+
 
 
 

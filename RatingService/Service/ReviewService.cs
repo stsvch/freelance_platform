@@ -6,9 +6,9 @@ namespace RatingService.Service
     public class ReviewService
     {
         private readonly ReviewDbContext _context;
-        private readonly RabbitMqService _rabbitMqService;
+        private readonly IMessageBus _rabbitMqService;
 
-        public ReviewService(ReviewDbContext context, RabbitMqService rabbitMqService)
+        public ReviewService(ReviewDbContext context, IMessageBus rabbitMqService)
         {
             _context = context;
             _rabbitMqService = rabbitMqService;

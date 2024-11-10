@@ -15,22 +15,26 @@ builder.Services.AddSingleton<IConnectionFactory>(sp =>
     };
 });
 
-// Настройка сервиса электронной почты
+builder.Services.AddSingleton<IConnection>(sp =>
+{
+    var factory = sp.GetRequiredService<IConnectionFactory>();
+    return factory.CreateConnection();
+});
+
 builder.Services.AddSingleton<EmailService>();
-builder.Services.AddSingleton<NotificationService.Service.NotificationService>();
+builder.Services.AddSingleton<RabbitMqService>(); 
+builder.Services.AddSingleton<NotifyService>();
+
+builder.Services.AddControllers();
 
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
 {
-    var projectService = scope.ServiceProvider.GetRequiredService<NotificationService.Service.NotificationService>();
-    if (projectService is NotificationService.Service.NotificationService service)
-    {
-        service.StartListeningForMessages(); // Начинаем прослушивание сообщений
-    }
+    var notifyService = scope.ServiceProvider.GetRequiredService<NotifyService>();
+    notifyService.StartListeningForMessages();
 }
 
-// Добавьте маршрутизацию
 app.UseRouting();
 app.UseEndpoints(endpoints =>
 {
@@ -38,4 +42,7 @@ app.UseEndpoints(endpoints =>
 });
 
 app.Run();
+
+
+
 

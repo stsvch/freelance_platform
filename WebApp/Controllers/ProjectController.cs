@@ -73,9 +73,15 @@ namespace WebApp.Controllers
         [HttpPost("create")]
         public async Task<IActionResult> CreateProject([FromForm] ProjectModel project)
         {
+            var previousUrl = Request.Headers["Referer"].ToString();
             var id = HttpContext.Session.GetString("Id");
             await _projectService.Create(id, project);
-            return RedirectToAction("Create");
+            if (string.IsNullOrEmpty(previousUrl))
+            {
+                return RedirectToAction("Create");
+            }
+
+            return Redirect(previousUrl);
         }
 
         [HttpPost("update")]
@@ -89,11 +95,16 @@ namespace WebApp.Controllers
         [HttpPost("submit")]
         public async Task<IActionResult> SubmitProject(int id)
         {
+            var previousUrl = Request.Headers["Referer"].ToString();
             var project = await _projectService.GetProject(id);
             project.Status = "Finished";
             await _projectService.Update(id, project);
+            if (string.IsNullOrEmpty(previousUrl))
+            {
+                return RedirectToAction("Index");
+            }
 
-            return RedirectToAction("Index");
+            return Redirect(previousUrl);
         }
 
         [HttpPost("delete")]

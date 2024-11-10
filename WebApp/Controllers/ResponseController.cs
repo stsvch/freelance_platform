@@ -31,7 +31,7 @@ namespace WebApp.Controllers
                         {
                             projects.Add(await _projectService.GetProject(response.ProjectId));
                         }
-                        var model = (Responses: responses, Projects : projects);
+                        var model = (Responses: responses.AsEnumerable(), Projects : projects.AsEnumerable());
                         return View(model);
                     }
                 case "Client":
@@ -42,23 +42,19 @@ namespace WebApp.Controllers
                         {
                             projects.Add(await _projectService.GetProject(response.ProjectId));
                         }
-                        var model = (Responses: responses, Projects: projects);
+                        var model = (Responses: responses.AsEnumerable(), Projects: projects.AsEnumerable());
                         return View(model);
                     }
                 default: return RedirectToAction("Login", "Auth");
             }
         }
 
-        [HttpGet("create/{projectId}")]
+        [HttpGet("create")]
         public async Task<IActionResult> Create(int projectId)
         {
             return View(projectId);
         }
-        /// <summary>
-        /// &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-        /// </summary>
-        /// <param name="response"></param>
-        /// <returns></returns>
+
         [HttpPost("create/response")]
         public async Task<IActionResult> CreateResponse([FromForm] Response response)
         {

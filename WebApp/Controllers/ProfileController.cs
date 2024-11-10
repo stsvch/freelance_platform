@@ -100,12 +100,12 @@ namespace WebApp.Controllers
             var clients = await _profileService.GetClientsAsync(userId);
             if (clients!=null)
             {
-                return View(clients);  // Передаем список фрилансеров в представление
+                return View(clients); 
             }
             else
             {
                 ViewBag.ErrorMessage = "Не удалось загрузить список фрилансеров. Попробуйте позже.";
-                return View();  // Если не удалось загрузить данные
+                return View();  
             }
         }
 
@@ -122,12 +122,12 @@ namespace WebApp.Controllers
             var freelancers = await _profileService.GetFreelancersAsync(userId);
             if (freelancers != null)
             {
-                return View(freelancers);  // Передаем список фрилансеров в представление
+                return View(freelancers);
             }
             else
             {
                 ViewBag.ErrorMessage = "Не удалось загрузить список фрилансеров. Попробуйте позже.";
-                return View();  // Если не удалось загрузить данные
+                return View(); 
             }
         }
 

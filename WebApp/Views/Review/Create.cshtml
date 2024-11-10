@@ -1,5 +1,27 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
-}
+﻿@model WebApp.Models.Review  
+
+<form asp-action="Create" asp-controller="Review" method="post">
+    <div class="mb-3">
+        <label for="ProjectId" class="form-label">ID Проекта</label>
+        <input type="number" id="ProjectId" name="ProjectId" class="form-control" required />
+    </div>
+
+    <div class="mb-3">
+        <label for="ClientId" class="form-label">ID Клиента</label>
+        <input type="number" id="ClientId" name="ClientId" class="form-control" required />
+    </div>
+
+    <input type="hidden" id="FreelancerId" name="FreelancerId" value="@Model.FreelancerId" />
+
+    <div class="mb-3">
+        <label for="Comment" class="form-label">Комментарий</label>
+        <textarea id="Comment" name="Comment" class="form-control"></textarea>
+    </div>
+
+    <div class="mb-3">
+        <label for="Rating" class="form-label">Рейтинг (1-5)</label>
+        <input type="number" id="Rating" name="Rating" class="form-control" min="1" max="5" required />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Отправить отзыв</button>
+</form>

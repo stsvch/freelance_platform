@@ -16,11 +16,10 @@ namespace WebApp.Services
             {
                 var role = context.HttpContext.Session.GetString("Role");
 
-                // Приводим controller к типу Controller, чтобы получить доступ к ViewData
                 if (context.Controller is Controller controller)
                 {
-                    controller.ViewData["Role"] = role; // Теперь можно использовать ViewData
-                                                        // Логирование
+                    controller.ViewData["Role"] = role; 
+                                                      
                     Console.WriteLine($"RoleFilter: Role set to {role}");
                 }
             }
@@ -31,5 +30,4 @@ namespace WebApp.Services
             // Можно оставить пустым, если нам не нужно выполнять действия после выполнения действия.
         }
     }
-
 }

@@ -4,47 +4,77 @@ using RatingService.Service;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Добавление контекста базы данных (MySQL)
-builder.Services.AddDbContext<ReviewDbContext>(options =>
-    options.UseMySql(builder.Configuration.GetConnectionString("DefaultConnection"),
-    new MySqlServerVersion(new Version(8, 0, 21))));
-
-// Настройки RabbitMQ
+// Добавление конфигурации для RabbitMQ
 builder.Services.AddSingleton<IConnectionFactory>(sp =>
 {
     var config = sp.GetRequiredService<IConfiguration>();
-    return new ConnectionFactory
+    var factory = new ConnectionFactory
     {
         HostName = config["RabbitMQ:HostName"],
         Port = int.Parse(config["RabbitMQ:Port"]),
         UserName = config["RabbitMQ:UserName"],
         Password = config["RabbitMQ:Password"]
     };
+    return factory;
 });
 
-// Добавление сервисов
+// Регистрируем RabbitMqService как Singleton
+builder.Services.AddSingleton<IMessageBus, RabbitMqService>();
+
+// Регистрация контекста базы данных (MySQL)
+builder.Services.AddDbContext<ReviewDbContext>(options =>
+{
+    options.UseMySql(
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        new MySqlServerVersion(new Version(8, 0, 21))
+    );
+});
+
 builder.Services.AddScoped<ReviewService>();
 builder.Services.AddScoped<ResponseService>();
-builder.Services.AddSingleton<IMessageBus, RabbitMqService>();
+
+builder.Services.AddLogging();
+
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Создание/миграция базы данных при запуске
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<ReviewDbContext>();
-    dbContext.Database.Migrate();
+    try
+    {
+        dbContext.Database.Migrate();
+    }
+    catch (Exception ex)
+    {
+    }
+}
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
-// Маршрутизация
 app.UseRouting();
 
-app.UseEndpoints(endpoints =>
-{
-    endpoints.MapControllers();
-});
-
+app.MapControllers();  
 
 app.Run();
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

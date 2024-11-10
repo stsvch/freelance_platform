@@ -34,13 +34,10 @@ namespace NotificationService.Service
 
                 using var smtp = new SmtpClient();
 
-                // Подключаемся к SMTP-серверу
                 await smtp.ConnectAsync(_configuration["Email:SmtpServer"], int.Parse(_configuration["Email:Port"]), SecureSocketOptions.SslOnConnect);
 
-                // Аутентифицируемся
                 await smtp.AuthenticateAsync(_configuration["Email:Username"], _configuration["Email:Password"]);
 
-                // Отправляем письмо
                 await smtp.SendAsync(email);
 
                 Console.WriteLine("Email sent successfully!");
@@ -63,7 +60,6 @@ namespace NotificationService.Service
             }
             finally
             {
-                // Попробуем отключиться от SMTP-сервера
                 try
                 {
                     using var smtp = new SmtpClient();
