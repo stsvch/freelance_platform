@@ -33,7 +33,7 @@ namespace UserMenegementService.Service
         {
             var user = await _context.Users
                             .Include(u => u.FreelancerProfile)
-                            .Include(u => u.ClientProfile) // Добавляем ClientProfile
+                            .Include(u => u.ClientProfile)
                             .SingleOrDefaultAsync(u => u.Email == email);
 
             if (user == null || !VerifyPassword(user, password))
@@ -80,37 +80,33 @@ namespace UserMenegementService.Service
 
         public async Task<string> GetClientMail(int clientId)
         {
-            // Ищем пользователя по ClientId и возвращаем его почту
             var userEmail = await _context.Users
                 .Where(u => u.ClientProfile.Id == clientId)
                 .Select(u => u.Email)
                 .FirstOrDefaultAsync();
 
-            return userEmail; // Вернет email или null, если пользователь с таким ClientId не найден
+            return userEmail; 
         }
 
         public async Task<string> GetFreelancerMail(int freelancerId)
         {
-            // Ищем пользователя по FreelancerId и возвращаем его почту
             var userEmail = await _context.Users
                 .Where(u => u.FreelancerProfile.Id == freelancerId)
                 .Select(u => u.Email)
                 .FirstOrDefaultAsync();
 
-            return userEmail; // Вернет email или null, если пользователь с таким FreelancerId не найден
+            return userEmail;
         }
 
 
         public async Task<User> RegisterUserAsync(UserRegister registerModel)
         {
-            // Проверка на существующего пользователя
             var existingUser = await _context.Users.SingleOrDefaultAsync(u => u.Email == registerModel.Email);
             if (existingUser != null)
             {
                 throw new InvalidOperationException("User with this email already exists.");
             }
 
-            // Создаем нового пользователя
             var newUser = new User
             {
                 Username = registerModel.Username,
@@ -120,11 +116,9 @@ namespace UserMenegementService.Service
                 CreatedAt = DateTime.UtcNow
             };
 
-            // Сохраняем пользователя, чтобы получить его ID
             _context.Users.Add(newUser);
-            await _context.SaveChangesAsync(); // Теперь newUser.Id установлен
+            await _context.SaveChangesAsync(); 
 
-            // Создаем профиль в зависимости от роли
             if (registerModel.Role == "Freelancer")
             {
                 var freelancerProfile = new FreelancerProfile
@@ -134,7 +128,7 @@ namespace UserMenegementService.Service
                     Bio = registerModel.Bio
                 };
                 _context.FreelancerProfiles.Add(freelancerProfile);
-                newUser.FreelancerProfile = freelancerProfile; // Присваиваем профиль пользователю
+                newUser.FreelancerProfile = freelancerProfile; 
             }
             else if (registerModel.Role == "Client")
             {
@@ -145,13 +139,10 @@ namespace UserMenegementService.Service
                     Description = registerModel.Description
                 };
                 _context.ClientProfiles.Add(clientProfile);
-                newUser.ClientProfile = clientProfile; // Присваиваем профиль пользователю
+                newUser.ClientProfile = clientProfile;
             }
 
-            // Сохраняем профиль
             await _context.SaveChangesAsync();
-
-            // Перезагружаем пользователя с профилями для корректной загрузки связанных данных
             var registeredUser = await _context.Users
                 .Include(u => u.FreelancerProfile)
                 .Include(u => u.ClientProfile)

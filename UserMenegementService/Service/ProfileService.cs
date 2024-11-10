@@ -9,7 +9,7 @@ namespace UserMenegementService.Service
         Task<FreelancerProfile> GetFreelancerProfileAsync(int userId);
         Task<ClientProfile> GetClientProfileAsync(int userId);
 
-        Task<FreelancerProfile> GetFreelancerProfileByIdAsync(int id);  // Поиск по Id профиля
+        Task<FreelancerProfile> GetFreelancerProfileByIdAsync(int id); 
         Task<ClientProfile> GetClientProfileByIdAsync(int id);
 
         Task<List<FreelancerProfile>> GetAllFreelancersExceptAsync(int userId);

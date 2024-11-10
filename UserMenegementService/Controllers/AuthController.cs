@@ -12,12 +12,10 @@ namespace UserMenegementService.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IUserService _userService;
-        private readonly IJwtService _jwtService;
 
-        public AuthController(IUserService userService, IJwtService jwtService)
+        public AuthController(IUserService userService)
         {
             _userService = userService;
-            _jwtService = jwtService;
         }
 
         [HttpPost("login")]
