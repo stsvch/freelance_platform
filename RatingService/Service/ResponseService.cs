@@ -31,11 +31,20 @@ namespace RatingService.Service
 
         public async Task<Response> CreateResponse(Response response)
         {
+            var existingResponse = await _context.Responses
+                .FirstOrDefaultAsync(r => r.FreelancerId == response.FreelancerId && r.ProjectId == response.ProjectId);
+
+            if (existingResponse != null)
+            {
+                throw new InvalidOperationException("the response already exists");
+            }
+
             _context.Responses.Add(response);
             await _context.SaveChangesAsync();
 
             return response;
         }
+
 
         public async Task<Response> UpdateResponse(Response updatedResponse)
         {

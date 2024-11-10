@@ -44,7 +44,6 @@ namespace UserMenegementService.Controllers
             try
             {
                 var user = await _userService.RegisterUserAsync(registerModel);
-                // var token = _jwtService.GenerateToken(user);
                 int id;
                if(user.Role == "Client")
                 {
