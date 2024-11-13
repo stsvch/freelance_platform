@@ -23,8 +23,7 @@ namespace WebApp.Controllers
             switch(role)
             {
                 case "Freelancer":
-                    {
-                        
+                    {                     
                         var responses = await _responseService.GetFreelancerRespose(int.Parse(HttpContext.Session.GetString("Id")));
                         List<ProjectModel> projects = new List<ProjectModel>();
                         foreach (var response in responses)

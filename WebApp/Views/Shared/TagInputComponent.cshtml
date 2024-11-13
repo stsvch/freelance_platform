@@ -1,54 +1,78 @@
-﻿@* TagInputComponent.cshtml *@
-<div>
+﻿<div>
     <input type="text" id="tagInput" placeholder="Исключить слова, через запятую" />
-    <button type="button" onclick="addTag()">Добавить</button>
+    <button type="button" id="addTagButton">Добавить</button>
 
     <form id="tagsForm" asp-action="Find" asp-controller="Project" method="post">
         <input type="hidden" id="tagsHiddenInput" name="tags" />
-
         <div id="tagsContainer"></div>
-
         <button type="submit" class="btn btn-primary">Отправить теги</button>
     </form>
 </div>
 
 @section Scripts {
     <script>
-        const tagsArray = [];
+        document.addEventListener("DOMContentLoaded", function () {
+            const tagsArray = [];
 
-        function addTag() {
-            const input = document.getElementById("tagInput");
-            const tagsContainer = document.getElementById("tagsContainer");
+            function addTag() {
+                console.log("Функция addTag вызвана");
 
-            const tagText = input.value.trim();
-            if (tagText === "") return;
+                const input = document.getElementById("tagInput");
+                const tagsContainer = document.getElementById("tagsContainer");
 
-            tagsArray.push(tagText);
+                const tagText = input.value.trim();
+                if (tagText === "") {
+                    console.log("Пустой тег, ничего не добавляем");
+                    return;
+                }
 
-            const tag = document.createElement("div");
-            tag.classList.add("tag");
+                if (tagsArray.includes(tagText)) {
+                    console.log("Тег уже существует:", tagText);
+                    return;
+                }
 
-            const tagLabel = document.createElement("span");
-            tagLabel.innerText = tagText;
-            tag.appendChild(tagLabel);
+                tagsArray.push(tagText);
+                console.log("Текущий массив тегов:", tagsArray);
 
-            const closeButton = document.createElement("button");
-            closeButton.innerText = "x";
-            closeButton.classList.add("close-btn");
-            closeButton.onclick = function () {
-                tagsArray.splice(tagsArray.indexOf(tagText), 1);
-                tag.remove();
+                const tag = document.createElement("div");
+                tag.classList.add("tag");
+
+                const tagLabel = document.createElement("span");
+                tagLabel.innerText = tagText;
+                tag.appendChild(tagLabel);
+
+                const closeButton = document.createElement("button");
+                closeButton.innerText = "x";
+                closeButton.classList.add("close-btn");
+                closeButton.onclick = function () {
+                    tagsArray.splice(tagsArray.indexOf(tagText), 1);
+                    tag.remove();
+                    console.log("Тег удален:", tagText);
+                };
+                tag.appendChild(closeButton);
+
+                tagsContainer.appendChild(tag);
+
+                input.value = "";
+            }
+
+            const addButton = document.getElementById("addTagButton");
+            if (addButton) {
+                addButton.addEventListener("click", addTag);
+            } else {
+                console.error("Кнопка не найдена!");
+            }
+
+            document.getElementById("tagsForm").onsubmit = function (e) {
+                e.preventDefault();
+                const tagsInput = document.getElementById("tagsHiddenInput");
+                tagsInput.value = JSON.stringify(tagsArray);
+                console.log("Отправка формы с тегами:", JSON.stringify(tagsArray));
+
+                // Если необходимо отправить форму:
+                // this.submit();
             };
-            tag.appendChild(closeButton);
-
-            tagsContainer.appendChild(tag);
-
-            input.value = "";
-        }
-
-        document.getElementById("tagsForm").onsubmit = function() {
-            document.getElementById("tagsHiddenInput").value = JSON.stringify(tagsArray);
-        };
+        });
     </script>
 
     <style>
@@ -58,6 +82,7 @@
             gap: 5px;
             margin-top: 10px;
         }
+
         .tag {
             display: flex;
             align-items: center;
@@ -66,6 +91,7 @@
             border-radius: 20px;
             font-size: 14px;
         }
+
         .close-btn {
             background: none;
             border: none;
@@ -76,4 +102,7 @@
         }
     </style>
 }
+
+
+
 

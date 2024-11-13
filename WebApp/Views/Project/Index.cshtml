@@ -40,7 +40,12 @@
                         }
                         else if (role == "Freelancer")
                         {
-                            <a href="@Url.Action("SubmitWork", "Projects", new { id = project.Id })" class="btn btn-success">Отправить работу</a>
+                            <form asp-action="Submit" asp-controller="Project" method="post">
+                                <input type="hidden" name="id" value="@project.Id" />
+                                @Html.AntiForgeryToken() 
+                                <button type="submit" class="btn btn-success">Отправить работу</button>
+                            </form>
+
                         }
                     </div>
                 </div>

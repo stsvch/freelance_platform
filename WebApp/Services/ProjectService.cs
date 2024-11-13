@@ -15,39 +15,47 @@ namespace WebApp.Services
 
         public async Task<ProjectModel> GetProject(int id)
         {
-            var correlationId = Guid.NewGuid().ToString();
-            var message = JsonConvert.SerializeObject(new
+            try
             {
-                Action = "Get",
-                ProjectId = id,
-                CorrelationId = correlationId
-            });
-
-            ProjectModel model = new ProjectModel();
-
-            _rabbitMqService.PublishMessage("ProjectQueue", message, correlationId);
-            var responseMessage = await _rabbitMqService.GetAndRemoveMessage(correlationId);
-
-            if (!string.IsNullOrEmpty(responseMessage))
-            {
-                var response = JsonConvert.DeserializeObject<dynamic>(responseMessage);
-                if (response.Action == "Get" && response.CorrelationId == correlationId)
+                var correlationId = Guid.NewGuid().ToString();
+                var message = JsonConvert.SerializeObject(new
                 {
-                    if (response.Status == "Success")
+                    Action = "Get",
+                    ProjectId = id,
+                    CorrelationId = correlationId
+                });
+
+                ProjectModel model = new ProjectModel();
+
+                _rabbitMqService.PublishMessage("ProjectQueue", message, correlationId);
+                var responseMessage = await _rabbitMqService.GetAndRemoveMessage(correlationId);
+
+                if (!string.IsNullOrEmpty(responseMessage))
+                {
+                    var response = JsonConvert.DeserializeObject<dynamic>(responseMessage);
+                    if (response.Action == "Get" && response.CorrelationId == correlationId)
                     {
-                        model.Id = response.Project.Id;
-                        model.Title = response.Project.Title;
-                        model.FreelancerId = response.Project.FreelancerId;
-                        model.Budget = response.Project.Budget;
-                        model.ClientId = response.Project.ClientId;
-                        model.Description = response.Project.Description;
-                        model.CreatedAt = response.Project.CreatedAt;
-                        model.UpdatedAt = response.Project.UpdatedAt;
+                        if (response.Status == "Success")
+                        {
+                            model.Id = response.Project.Id;
+                            model.Title = response.Project.Title;
+                            model.FreelancerId = response.Project.FreelancerId;
+                            model.Budget = response.Project.Budget;
+                            model.ClientId = response.Project.ClientId;
+                            model.Description = response.Project.Description;
+                            model.CreatedAt = response.Project.CreatedAt;
+                            model.UpdatedAt = response.Project.UpdatedAt;
+                        }
+                        return model;
                     }
-                    return model;
                 }
+                return new ProjectModel();
             }
-            return null;
+            catch (Exception ex) 
+            {
+                Console.WriteLine(ex.Message);
+                return new ProjectModel();
+            }
         }
 
         public async Task Create(string id, ProjectModel project)
@@ -70,76 +78,106 @@ namespace WebApp.Services
 
         public async Task<List<ProjectModel>> Find(string[] tags)
         {
-            var correlationId = Guid.NewGuid().ToString();
-            var message = JsonConvert.SerializeObject(new
+            try
             {
-                Action = "Find",
-                Tags = tags,
-                CorrelationId = correlationId
-            });
-            _rabbitMqService.PublishMessage("ProjectQueue", message, correlationId);
-            var responseMessage = await _rabbitMqService.GetAndRemoveMessage(correlationId);
-            var response = JsonConvert.DeserializeObject<dynamic>(responseMessage);
+                var correlationId = Guid.NewGuid().ToString();
+                var message = JsonConvert.SerializeObject(new
+                {
+                    Action = "Find",
+                    Tags = tags,
+                    CorrelationId = correlationId
+                });
+                _rabbitMqService.PublishMessage("ProjectQueue", message, correlationId);
+                var responseMessage = await _rabbitMqService.GetAndRemoveMessage(correlationId);
+                var response = JsonConvert.DeserializeObject<dynamic>(responseMessage);
 
-            if (response.Status == "Success")
-            {
-                return (List<ProjectModel>)response.Projects;
-
+                if (response.Status == "Success")
+                {
+                    var projectList = JsonConvert.DeserializeObject<List<ProjectModel>>(response.Projects.ToString());
+                    return projectList;
+                }
+                return new List<ProjectModel>();
             }
-            return null;
+            catch (Exception ex) 
+            {
+                Console.WriteLine(ex.Message);
+                return new List<ProjectModel>();
+            }
         }
 
         public async Task Update(int id, ProjectModel project)
         {
-            var correlationId = Guid.NewGuid().ToString();
-            var message = JsonConvert.SerializeObject(new
+            try
             {
-                Action = "Update",
-                ProjectId = id,
-                Title = project.Title,
-                Budget = project.Budget,
-                Description = project.Description,
-                CorrelationId = correlationId,
-                Status = project.Status
-            });
+                var correlationId = Guid.NewGuid().ToString();
+                var message = JsonConvert.SerializeObject(new
+                {
+                    Action = "Update",
+                    ProjectId = id,
+                    Title = project.Title,
+                    Budget = project.Budget,
+                    Description = project.Description,
+                    CorrelationId = correlationId,
+                    Status = project.Status
+                });
 
-            _rabbitMqService.PublishMessage("ProjectQueue", message, correlationId);
+                _rabbitMqService.PublishMessage("ProjectQueue", message, correlationId);
 
-            var responseMessage = await _rabbitMqService.GetAndRemoveMessage(correlationId);
-            var response = JsonConvert.DeserializeObject<dynamic>(responseMessage);
+                var responseMessage = await _rabbitMqService.GetAndRemoveMessage(correlationId);
+                var response = JsonConvert.DeserializeObject<dynamic>(responseMessage);
+            }
+            catch (Exception ex) 
+            {
+                Console.WriteLine(ex.Message);
+            }
         }
 
         public async Task<dynamic> Delete(int id)
         {
-            var correlationId = Guid.NewGuid().ToString();
-            var message = JsonConvert.SerializeObject(new
+            try
             {
-                Action = "Delete",
-                ProjectId = id,
-                CorrelationId = correlationId
-            });
+                var correlationId = Guid.NewGuid().ToString();
+                var message = JsonConvert.SerializeObject(new
+                {
+                    Action = "Delete",
+                    ProjectId = id,
+                    CorrelationId = correlationId
+                });
 
-            _rabbitMqService.PublishMessage("ProjectQueue", message, correlationId);
+                _rabbitMqService.PublishMessage("ProjectQueue", message, correlationId);
 
-            var responseMessage = await _rabbitMqService.GetAndRemoveMessage(correlationId);
-            var response = JsonConvert.DeserializeObject<dynamic>(responseMessage);
+                var responseMessage = await _rabbitMqService.GetAndRemoveMessage(correlationId);
+                var response = JsonConvert.DeserializeObject<dynamic>(responseMessage);
 
-            return response;
+                return response;
+            }
+            catch(Exception ex)
+            {
+                return null;
+            }
         }
         public async Task<List<ProjectModel>> GetProjectsForFreelancerAsync(int freelancerId)
         {
-            var correlationId = Guid.NewGuid().ToString();
-            var message = JsonConvert.SerializeObject(new
+            try
             {
-                Action = "GetAllFreelancer",
-                FreelancerId = freelancerId,
-                CorrelationId = correlationId
-            });
+                var correlationId = Guid.NewGuid().ToString();
+                var message = JsonConvert.SerializeObject(new
+                {
+                    Action = "GetAllFreelancer",
+                    FreelancerId = freelancerId,
+                    CorrelationId = correlationId
+                });
 
-            _rabbitMqService.PublishMessage("ProjectQueue", message, correlationId);
-            var responseMessage = await _rabbitMqService.GetAndRemoveMessage(correlationId);
+                _rabbitMqService.PublishMessage("ProjectQueue", message, correlationId);
+                var responseMessage = await _rabbitMqService.GetAndRemoveMessage(correlationId);
 
-            return ParseProjectResponse(responseMessage, correlationId, "GetAllFreelancer");
+                return ParseProjectResponse(responseMessage, correlationId, "GetAllFreelancer");
+            }
+            catch (Exception ex) 
+            {
+                Console.WriteLine(ex.Message);
+                return new List<ProjectModel>();
+            }
         }
 
         public async Task<List<ProjectModel>> GetProjectsForClientAsync(int clientId)
@@ -160,50 +198,64 @@ namespace WebApp.Services
 
         public async Task<List<ProjectModel>> GetList()
         {
-            var correlationId = Guid.NewGuid().ToString();
-            var message = JsonConvert.SerializeObject(new
+            try
             {
-                Action = "GetList",
-                CorrelationId = correlationId
-            });
+                var correlationId = Guid.NewGuid().ToString();
+                var message = JsonConvert.SerializeObject(new
+                {
+                    Action = "GetList",
+                    CorrelationId = correlationId
+                });
 
-            List<ProjectModel> model = new List<ProjectModel>();
+                List<ProjectModel> model = new List<ProjectModel>();
 
-            _rabbitMqService.PublishMessage("ProjectQueue", message, correlationId);
+                _rabbitMqService.PublishMessage("ProjectQueue", message, correlationId);
 
-            var responseMessage = await _rabbitMqService.GetAndRemoveMessage(correlationId);
-            return ParseProjectResponse(responseMessage, correlationId, "GetList");
+                var responseMessage = await _rabbitMqService.GetAndRemoveMessage(correlationId);
+                return ParseProjectResponse(responseMessage, correlationId, "GetList");
+            }
+            catch (Exception ex) 
+            {
+                Console.WriteLine(ex.Message);
+                return new List<ProjectModel>();
+            }
         }
 
         private List<ProjectModel> ParseProjectResponse(string responseMessage, string correlationId, string expectedAction)
         {
             var model = new List<ProjectModel>();
-
-            if (!string.IsNullOrEmpty(responseMessage))
+            try
             {
-                var response = JsonConvert.DeserializeObject<dynamic>(responseMessage);
-                if (response.Action == expectedAction && response.CorrelationId == correlationId)
+                if (!string.IsNullOrEmpty(responseMessage))
                 {
-                    if (response.Status == "Success")
+                    var response = JsonConvert.DeserializeObject<dynamic>(responseMessage);
+                    if (response.Action == expectedAction && response.CorrelationId == correlationId)
                     {
-                        foreach (var project in response.Projects)
+                        if (response.Status == "Success")
                         {
-                            model.Add(new ProjectModel
+                            foreach (var project in response.Projects)
                             {
-                                Id = project.Id,
-                                Title = project.Title,
-                                Description = project.Description,
-                                Budget = project.Budget,
-                                ClientId = project.ClientId,
-                                FreelancerId = project.FreelancerId,
-                                CreatedAt = project.CreatedAt,
-                                UpdatedAt = project.UpdatedAt
-                            });
+                                model.Add(new ProjectModel
+                                {
+                                    Id = project.Id,
+                                    Title = project.Title,
+                                    Description = project.Description,
+                                    Budget = project.Budget,
+                                    ClientId = project.ClientId,
+                                    FreelancerId = project.FreelancerId,
+                                    CreatedAt = project.CreatedAt,
+                                    UpdatedAt = project.UpdatedAt
+                                });
+                            }
                         }
                     }
                 }
-            }
 
+            }
+            catch (Exception ex) 
+            {
+                Console.WriteLine(ex.Message);
+            }
             return model;
         }
     }

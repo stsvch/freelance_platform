@@ -25,8 +25,6 @@ builder.Services.AddSingleton<EmailService>();
 builder.Services.AddSingleton<RabbitMqService>(); 
 builder.Services.AddSingleton<NotifyService>();
 
-builder.Services.AddControllers();
-
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
@@ -36,10 +34,6 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.UseRouting();
-app.UseEndpoints(endpoints =>
-{
-    endpoints.MapControllers();
-});
 
 app.Run();
 

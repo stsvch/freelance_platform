@@ -6,8 +6,19 @@
 }
 
 <div class="container mt-4">
+    <div>
+        <input type="text" id="tagInput" placeholder="слова, через запятую" />
+        <button type="button" id="addTagButton">Добавить</button>
+
+        <!-- Изменено на метод POST -->
+        <form id="tagsForm" asp-action="Find" asp-controller="Project" method="post">
+            <input type="hidden" id="tagsHiddenInput" name="tags" />
+            <div id="tagsContainer"></div>
+            <button type="submit" class="btn btn-primary">Отправить теги</button>
+        </form>
+    </div>
+
     <h2 class="mb-4">Доступные проекты</h2>
-    @await Html.PartialAsync("TagInputComponent")
     @if (Model != null && Model.Any())
     {
         <div class="list-group">
@@ -46,11 +57,111 @@
 
 <script>
     function toggleProjectDetails(projectId) {
-        var details = document.getElementById('projectDetails-' + projectId);
-        if (details.style.display === 'none') {
-            details.style.display = 'block';
-        } else {
-            details.style.display = 'none';
+        const details = document.getElementById(`projectDetails-${projectId}`);
+        if (!details) {
+            console.error(`Элемент с ID projectDetails-${projectId} не найден`);
+            return;
         }
+        details.style.display = (details.style.display === 'none' || details.style.display === '') ? 'block' : 'none';
     }
+    document.addEventListener("DOMContentLoaded", function () {
+        const tagsArray = [];
+
+        // Функция добавления тега
+        function addTag() {
+            const input = document.getElementById("tagInput");
+            const tagsContainer = document.getElementById("tagsContainer");
+
+            const tagText = input.value.trim();
+            if (tagText === "") {
+                console.log("Пустой тег, ничего не добавляем");
+                return;
+            }
+
+            // Проверяем на наличие дубликатов
+            if (tagsArray.includes(tagText)) {
+                console.log("Тег уже существует:", tagText);
+                return;
+            }
+
+            // Добавляем тег в массив
+            tagsArray.push(tagText);
+            console.log("Текущий массив тегов:", tagsArray);
+
+            // Создаем визуальное представление тега
+            const tag = document.createElement("div");
+            tag.classList.add("tag");
+
+            const tagLabel = document.createElement("span");
+            tagLabel.innerText = tagText;
+            tag.appendChild(tagLabel);
+
+            const closeButton = document.createElement("button");
+            closeButton.innerText = "x";
+            closeButton.classList.add("close-btn");
+            closeButton.onclick = function () {
+                tagsArray.splice(tagsArray.indexOf(tagText), 1);
+                tag.remove();
+                console.log("Тег удален:", tagText);
+            };
+            tag.appendChild(closeButton);
+
+            tagsContainer.appendChild(tag);
+
+            // Очищаем поле ввода
+            input.value = "";
+        }
+
+        // Добавляем обработчик на кнопку "Добавить"
+        const addButton = document.getElementById("addTagButton");
+        if (addButton) {
+            addButton.addEventListener("click", addTag);
+        } else {
+            console.error("Кнопка не найдена!");
+        }
+
+        // Отправка формы с тегами
+        document.getElementById("tagsForm").onsubmit = function (e) {
+            // Превентивно предотвращаем отправку формы
+            e.preventDefault();
+
+            // Заполняем скрытое поле значением из массива тегов
+            const tagsInput = document.getElementById("tagsHiddenInput");
+            tagsInput.value = JSON.stringify(tagsArray);
+            console.log("Отправка формы с тегами:", JSON.stringify(tagsArray));
+
+            // После заполнения, отправляем форму вручную
+            this.submit();
+        };
+
+    });
 </script>
+
+<style>
+    #tagsContainer {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        margin-top: 10px;
+    }
+
+    .tag {
+        display: flex;
+        align-items: center;
+        padding: 5px 10px;
+        background-color: #e0e0e0;
+        border-radius: 20px;
+        font-size: 14px;
+    }
+
+    .close-btn {
+        background: none;
+        border: none;
+        color: #ff0000;
+        font-size: 16px;
+        margin-left: 8px;
+        cursor: pointer;
+    }
+</style>
+
+

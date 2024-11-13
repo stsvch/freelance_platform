@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using ProjectManagementService.Model;
 using System.Diagnostics;
 
@@ -85,61 +86,47 @@ namespace ProjectManagementService.Service
         {
             using (var scope = _serviceProvider.CreateScope())
             {
-                string[] tags = message.Tags.ToObject<string[]>();  // Преобразуем динамический список в массив строк
-
-                // Извлекаем correlationId
+                string[] tags = JsonConvert.DeserializeObject<string[]>(message.Tags.ToString());
+                tags = tags.Select(tag => tag.Trim('[', ']', '"')).ToArray();
+                Console.WriteLine("Фильтрация по тегам:");
+                foreach (var tag in tags)
+                {
+                    Console.WriteLine(tag); 
+                }
                 var correlationId = message.CorrelationId.ToString();
                 var context = scope.ServiceProvider.GetRequiredService<ProjectDbContext>();
-
                 using (var transaction = await context.Database.BeginTransactionAsync())
                 {
                     try
                     {
-                        // Начинаем с базового запроса
                         var query = context.Projects.AsQueryable();
-
-                        // Для каждого тега добавляем условие Contains в запрос
-                        query = query.Where(p => tags.All(tag => p.Description.Contains(tag)));
-
-                        // Выполняем запрос
+                        foreach (var tag in tags)
+                        {
+                            var tagLower = tag.ToLower().Trim();
+                            query = query.Where(p => p.Description.ToLower().Contains(tagLower) && p.FreelancerId == null);
+                        }
                         var projects = await query.ToListAsync();
 
                         if (projects == null || projects.Count == 0)
                             throw new Exception("Проекты не найдены");
-                        if (projects.Any())
+                        var successMessage = new
                         {
-                            var successMessage = new
-                            {
-                                Action = "Find",
-                                Status = "Success",
-                                CorrelationId = message.CorrelationId,
-                                Projects = projects
-                            };
+                            Action = "Find",
+                            Status = "Success",
+                            CorrelationId = message.CorrelationId,
+                            Projects = projects
+                        };
 
-                            await _messageBus.PublishAsync("ProjectResponseQueue", JsonConvert.SerializeObject(successMessage));
-                        }
-                        else
-                        {
-                            var errorMessage = new
-                            {
-                                Action = "GetList",
-                                Status = "Error",
-                                CorrelationId = message.CorrelationId.ToString(),
-                                Message = "Проекты не найдены"
-                            };
-                            await _messageBus.PublishAsync("ProjectResponseQueue", JsonConvert.SerializeObject(errorMessage));
-                        }
-                        await transaction.CommitAsync();
+                        await _messageBus.PublishAsync("ProjectResponseQueue", JsonConvert.SerializeObject(successMessage));
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"Error: {ex.Message}");
+                        Console.WriteLine($"Ошибка: {ex.Message}");
                         await transaction.RollbackAsync();
                     }
                 }
             }
         }
-
 
         public async Task HandleResponseMessage(string message)
         {
@@ -337,7 +324,6 @@ namespace ProjectManagementService.Service
 
                         if (projects.Any())
                         {
-                            // Формируем успешное сообщение с проектами
                             var successMessage = new
                             {
                                 Action = "GetAllClient",

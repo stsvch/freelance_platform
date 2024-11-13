@@ -14,8 +14,6 @@ namespace WebApp.Services
         {
             _channel = channel;
         }
-
-        // Отправка сообщения в очередь RabbitMQ
         public void PublishMessage(string queueName, string message, string correlationId)
         {
             var properties = _channel.CreateBasicProperties();
@@ -26,20 +24,15 @@ namespace WebApp.Services
 
             _channel.BasicPublish(exchange: "", routingKey: queueName, basicProperties: properties, body: body);
         }
-
-        // Метод для извлечения и удаления сообщения из словаря по ключу (correlationId)
         public async Task<string> GetAndRemoveMessage(string correlationId)
         {
             await Task.Delay(500);
-            // Проверяем, существует ли ключ в словаре
             if (_pendingMessages.TryGetValue(correlationId, out var message))
             {
-                // Удаляем сообщение из словаря
                 _pendingMessages.Remove(correlationId);
-                return message; // Возвращаем извлеченное сообщение
+                return message; 
             }
-
-            return null; // Если сообщения с таким ключом нет, возвращаем null
+            return null; 
         }
 
         public async Task ListenForMessagesAsync(string queueName)
@@ -52,13 +45,11 @@ namespace WebApp.Services
                 var body = ea.Body.ToArray();
                 var message = Encoding.UTF8.GetString(body);
 
-                // Десериализация сообщения для получения correlationId
                 var response = JsonConvert.DeserializeObject<dynamic>(message);
                 string correlationId = response.CorrelationId;
 
                 _pendingMessages[correlationId] = message;
 
-                // Подтверждение обработки сообщения
                 _channel.BasicAck(ea.DeliveryTag, false);
             };
 

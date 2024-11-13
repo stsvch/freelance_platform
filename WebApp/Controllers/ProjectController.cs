@@ -93,18 +93,12 @@ namespace WebApp.Controllers
         }
 
         [HttpPost("submit")]
-        public async Task<IActionResult> SubmitProject(int id)
+        public async Task<IActionResult> Submit(int id)
         {
-            var previousUrl = Request.Headers["Referer"].ToString();
             var project = await _projectService.GetProject(id);
             project.Status = "Finished";
             await _projectService.Update(id, project);
-            if (string.IsNullOrEmpty(previousUrl))
-            {
-                return RedirectToAction("Index");
-            }
-
-            return Redirect(previousUrl);
+            return RedirectToAction("Index");
         }
 
         [HttpPost("delete")]
@@ -135,10 +129,23 @@ namespace WebApp.Controllers
         }
 
         [HttpPost("find")]
-        public async Task<IActionResult> Find([FromForm] string[] tags)
+        public async Task<IActionResult> Find(string tags)
         {
-            var model = await _projectService.Find(tags);
-            return View("List", model);
+            if (!string.IsNullOrEmpty(tags))
+            {
+                // Разделяем строку на массив строк
+                var tagsArray = tags.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                                    .Select(t => t.Trim()) // Удаляем пробелы вокруг тегов
+                                    .ToArray();
+
+                var model = await _projectService.Find(tagsArray);
+                return View("List", model);
+            }
+
+            // Если теги пусты, перенаправляем на действие List без параметров
+            return RedirectToAction("List");
         }
+
+
     }
 }

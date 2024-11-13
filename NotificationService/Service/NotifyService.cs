@@ -60,16 +60,30 @@ namespace NotificationService.Service
 
         private async Task CreateResponseAsync(dynamic projectMessage)
         {
-            var client = projectMessage.ClientId;
-            var mail = await GetClientMail(Convert.ToInt32(client));
-            await SendEmailAsync(mail, "Create");
+            try
+            {
+                var client = projectMessage.ClientId;
+                var mail = await GetClientMail(Convert.ToInt32(client));
+                await SendEmailAsync(mail, "Create");
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine($"{ex.Message}", ex);
+            }
         }
 
         private async Task AcceptAsync(dynamic projectMessage)
         {
-            var freelancerId = projectMessage.FreelancerId;
-            var mail = await GetFreelancerMail(Convert.ToInt32(freelancerId));
-            await SendEmailAsync(mail, "Accept");
+            try
+            {
+                var freelancerId = projectMessage.FreelancerId;
+                var mail = await GetFreelancerMail(Convert.ToInt32(freelancerId));
+                await SendEmailAsync(mail, "Accept");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"{ex.Message}", ex);
+            }
         }
 
         public async Task<string> GetAndRemoveMessage(string correlationId)
@@ -87,35 +101,58 @@ namespace NotificationService.Service
 
         public async Task SaveMessage(string message)
         {
-            var response = JsonConvert.DeserializeObject<dynamic>(message);
-            string correlationId = response.CorrelationId;
+            try
+            {
+                var response = JsonConvert.DeserializeObject<dynamic>(message);
+                string correlationId = response.CorrelationId;
 
-            _pendingMessages[correlationId] = message;
+                _pendingMessages[correlationId] = message;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"{ex.Message}", ex);
+            }
         }
         public async Task<string> GetClientMail(int clientId)
         {
-            var correlationId = Guid.NewGuid().ToString();
-            var message = new
+            try
             {
-                Action = "GetClientMail",
-                CorrelationId = correlationId,
-                ClientId = clientId
-            };
-            await _rabbitMqService.PublishAsync("NotificationUserQueue", JsonConvert.SerializeObject(message));
-            return await GetAndRemoveMessage(correlationId);
+                var correlationId = Guid.NewGuid().ToString();
+                var message = new
+                {
+                    Action = "GetClientMail",
+                    CorrelationId = correlationId,
+                    ClientId = clientId
+                };
+                await _rabbitMqService.PublishAsync("NotificationUserQueue", JsonConvert.SerializeObject(message));
+                return await GetAndRemoveMessage(correlationId);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"{ex.Message}", ex);
+                return string.Empty;
+            }
         }
 
         public async Task<string> GetFreelancerMail(int freelancerId)
         {
-            var correlationId = Guid.NewGuid().ToString();
-            var message = new
+            try
             {
-                Action = "GetFreelancerMail",
-                CorrelationId = correlationId,
-                FreelancerId = freelancerId
-            };
-            await _rabbitMqService.PublishAsync("NotificationUserQueue", JsonConvert.SerializeObject(message));
-            return await GetAndRemoveMessage(correlationId);
+                var correlationId = Guid.NewGuid().ToString();
+                var message = new
+                {
+                    Action = "GetFreelancerMail",
+                    CorrelationId = correlationId,
+                    FreelancerId = freelancerId
+                };
+                await _rabbitMqService.PublishAsync("NotificationUserQueue", JsonConvert.SerializeObject(message));
+                return await GetAndRemoveMessage(correlationId);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"{ex.Message}", ex);
+                return string.Empty;
+            }
         }
 
         public async Task SendEmailAsync(string mail, string message)
@@ -127,7 +164,6 @@ namespace NotificationService.Service
                 Subject = "Response"
             };
             await _emailService.SendEmailAsync(notification);
-
         }
     }
 }

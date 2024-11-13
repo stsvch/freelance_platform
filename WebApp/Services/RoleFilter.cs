@@ -9,8 +9,7 @@ namespace WebApp.Services
         {
             var userId = context.HttpContext.Session.GetString("UserId");
 
-            // Логирование
-            Console.WriteLine($"RoleFilter invoked. UserId: {userId}");
+            Console.WriteLine($"RoleFilter UserId: {userId}");
 
             if (!string.IsNullOrEmpty(userId))
             {
@@ -27,7 +26,6 @@ namespace WebApp.Services
 
         public void OnActionExecuted(ActionExecutedContext context)
         {
-            // Можно оставить пустым, если нам не нужно выполнять действия после выполнения действия.
         }
     }
 }

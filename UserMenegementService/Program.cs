@@ -6,6 +6,7 @@ using System.Text;
 using UserMenegementService.Service;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Logging.AddConsole();
 
 builder.Services.AddSingleton<IConnection>(sp =>
 {

@@ -22,6 +22,13 @@ namespace RatingService.Service
                 .ToListAsync();
         }
 
+        public async Task<List<Response>> GetFreelancerResponse(int freelancerId)
+        {
+            return await _context.Responses
+                .Where(c => c.FreelancerId == freelancerId)
+                .ToListAsync();
+        }
+
         public async Task<List<Response>> GetProjectResponse(int projectId)
         {
             return await _context.Responses

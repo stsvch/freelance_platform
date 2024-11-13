@@ -49,7 +49,7 @@ namespace RatingService.Controllers
 
             try
             {
-                var response = await _responseService.GetClientResponse(freelancerId);
+                var response = await _responseService.GetFreelancerResponse(freelancerId);
                 if (response == null)
                 {
                     return NotFound("No response found for the specified client.");
