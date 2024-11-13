@@ -1,28 +1,28 @@
-﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
-using System.Data;
-using System.Text;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using WebApp.Models;
 using WebApp.Services;
-//var userId = HttpContext.Session.GetString("UserId");
+
 namespace WebApp.Controllers
 {
     [ServiceFilter(typeof(RoleFilter))]
     [Route("auth")]
     public class AuthController : Controller
     {
-        private readonly IHttpClientFactory _httpClientFactory;
+        private readonly AuthService _authService;
+        private readonly ILogger<AuthController> _logger;
 
-        public AuthController(IHttpClientFactory httpClientFactory)
+        public AuthController(AuthService authService, ILogger<AuthController> logger)
         {
-            _httpClientFactory = httpClientFactory;
+            _authService = authService;
+            _logger = logger;
         }
 
         [HttpGet("logout")]
         public IActionResult Logout()
         {
             HttpContext.Session.Clear();
+            _logger.LogInformation("Пользователь вышел из системы.");
             return RedirectToAction("Login");
         }
 
@@ -35,48 +35,40 @@ namespace WebApp.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login(UserLogin model)
         {
-            // Хешируем пароль с использованием метода HashPassword
-            var passwordHash = HashPassword.Hash(model.PasswordHash);
-
-            // Создаем объект для отправки на микросервис
-            var loginRequest = new
+            try
             {
-                Email = model.Email,
-                PasswordHash = passwordHash
-            };
-
-            var client = _httpClientFactory.CreateClient();
-            var content = new StringContent(JsonConvert.SerializeObject(loginRequest), Encoding.UTF8, "application/json");
-
-            var response = await client.PostAsync("https://localhost:7145/api/auth/login", content);
-
-            if (response.IsSuccessStatusCode)
-            {
-                var contentResponse = await response.Content.ReadAsStringAsync();
-                var responseData = JsonConvert.DeserializeObject<dynamic>(contentResponse);
-
-                string userId = responseData?.userId?.ToString();
-                string role = responseData?.role?.ToString();
-                string id = responseData?.id?.ToString();
-
-
-                if (!string.IsNullOrEmpty(userId))
+                var response = await _authService.Login(model);
+                if (response != null)
                 {
-                    // Сохраняем ID пользователя и роль в сессии
-                    HttpContext.Session.SetString("UserId", userId);
-                    HttpContext.Session.SetString("Role", role);
-                    HttpContext.Session.SetString("Id", id);
-                }
+                    string userId = response?.userId?.ToString();
+                    string role = response?.role?.ToString();
+                    string id = response?.id?.ToString();
 
-                return RedirectToAction("Index", "Profile");
+                    if (!string.IsNullOrEmpty(userId))
+                    {
+                        HttpContext.Session.SetString("UserId", userId);
+                        HttpContext.Session.SetString("Role", role);
+                        HttpContext.Session.SetString("Id", id);
+
+                        _logger.LogInformation("Успешный вход пользователя с ID: {UserId}, роль: {Role}", userId, role);
+                    }
+
+                    return RedirectToAction("Index", "Profile");
+                }
+                else
+                {
+                    _logger.LogWarning("Ошибка входа: неверное имя пользователя или пароль.");
+                    ViewBag.ErrorMessage = "Неверное имя пользователя или пароль. Попробуйте снова.";
+                    return View("Login");
+                }
             }
-            else
+            catch (Exception ex)
             {
-                // Обрабатываем ошибки
-                return StatusCode((int)response.StatusCode, "Error occurred while calling microservice");
+                _logger.LogError(ex, "Неожиданная ошибка при входе.");
+                ViewBag.ErrorMessage = "Произошла ошибка при попытке входа. Попробуйте позже.";
+                return View("Login");
             }
         }
-
 
         [HttpGet("register")]
         public IActionResult Register()
@@ -87,62 +79,40 @@ namespace WebApp.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register(UserRegister model)
         {
-            string message;
-            if(model.Role=="Client")
+            try
             {
-                message = JsonConvert.SerializeObject(new
+                var response = await _authService.Register(model);
+                if (response != null)
                 {
-                    Username = model.Username,
-                    PasswordHash = HashPassword.Hash(model.PasswordHash),  // Пароль передается без хеширования
-                    Email = model.Email,
-                    Role = model.Role,
-                    Description = model.Description,
-                    CompanyName = model.CompanyName
-                });
-            }
-            else 
-            {
-                message = JsonConvert.SerializeObject(new
-                {
-                    Username = model.Username,
-                    PasswordHash = HashPassword.Hash(model.PasswordHash), 
-                    Email = model.Email,
-                    Role = model.Role,
-                    Skills = model.Skills,
-                    Bio = model.Bio
-                });
-            }
+                    string userId = response?.userId?.ToString();
+                    string role = response?.role?.ToString();
+                    string id = response?.id?.ToString();
 
+                    if (!string.IsNullOrEmpty(userId))
+                    {
+                        HttpContext.Session.SetString("UserId", userId);
+                        HttpContext.Session.SetString("Role", role);
+                        HttpContext.Session.SetString("Id", id);
 
-            var client = _httpClientFactory.CreateClient();
-            var content = new StringContent(message, Encoding.UTF8, "application/json");
+                        _logger.LogInformation("Успешная регистрация пользователя с ID: {UserId}, роль: {Role}", userId, role);
+                    }
 
-            var response = await client.PostAsync("https://localhost:7145/api/auth/register", content);
-
-            if (response.IsSuccessStatusCode)
-            {
-                var contentResponse = await response.Content.ReadAsStringAsync();
-                var responseData = JsonConvert.DeserializeObject<dynamic>(contentResponse);
-
-                string userId = responseData?.userId?.ToString();
-                string role = responseData?.role?.ToString();
-                string id = responseData?.id?.ToString();
-
-                if (!string.IsNullOrEmpty(userId))
-                {
-                    // Сохраняем ID пользователя и роль в сессии
-                    HttpContext.Session.SetString("UserId", userId);
-                    HttpContext.Session.SetString("Role", role);
-                    HttpContext.Session.SetString("Id", id);
+                    return RedirectToAction("Index", "Profile");
                 }
-
-                return RedirectToAction("Index", "Profile");
+                else
+                {
+                    _logger.LogWarning("Ошибка регистрации: регистрация не удалась.");
+                    ViewBag.ErrorMessage = "Не удалось зарегистрировать пользователя. Попробуйте снова.";
+                    return View("Register");
+                }
             }
-            else
+            catch (Exception ex)
             {
-                // Обрабатываем ошибки
-                return StatusCode((int)response.StatusCode, "Error occurred while calling microservice");
+                _logger.LogError(ex, "Неожиданная ошибка при регистрации.");
+                ViewBag.ErrorMessage = "Произошла ошибка при попытке регистрации. Попробуйте позже.";
+                return View("Register");
             }
         }
     }
 }
+

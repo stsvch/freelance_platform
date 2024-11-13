@@ -10,7 +10,6 @@
         <input type="text" id="tagInput" placeholder="слова, через запятую" />
         <button type="button" id="addTagButton">Добавить</button>
 
-        <!-- Изменено на метод POST -->
         <form id="tagsForm" asp-action="Find" asp-controller="Project" method="post">
             <input type="hidden" id="tagsHiddenInput" name="tags" />
             <div id="tagsContainer"></div>
@@ -67,7 +66,6 @@
     document.addEventListener("DOMContentLoaded", function () {
         const tagsArray = [];
 
-        // Функция добавления тега
         function addTag() {
             const input = document.getElementById("tagInput");
             const tagsContainer = document.getElementById("tagsContainer");
@@ -78,17 +76,14 @@
                 return;
             }
 
-            // Проверяем на наличие дубликатов
             if (tagsArray.includes(tagText)) {
                 console.log("Тег уже существует:", tagText);
                 return;
             }
 
-            // Добавляем тег в массив
             tagsArray.push(tagText);
             console.log("Текущий массив тегов:", tagsArray);
 
-            // Создаем визуальное представление тега
             const tag = document.createElement("div");
             tag.classList.add("tag");
 
@@ -108,11 +103,9 @@
 
             tagsContainer.appendChild(tag);
 
-            // Очищаем поле ввода
             input.value = "";
         }
 
-        // Добавляем обработчик на кнопку "Добавить"
         const addButton = document.getElementById("addTagButton");
         if (addButton) {
             addButton.addEventListener("click", addTag);
@@ -120,17 +113,11 @@
             console.error("Кнопка не найдена!");
         }
 
-        // Отправка формы с тегами
         document.getElementById("tagsForm").onsubmit = function (e) {
-            // Превентивно предотвращаем отправку формы
             e.preventDefault();
-
-            // Заполняем скрытое поле значением из массива тегов
             const tagsInput = document.getElementById("tagsHiddenInput");
             tagsInput.value = JSON.stringify(tagsArray);
             console.log("Отправка формы с тегами:", JSON.stringify(tagsArray));
-
-            // После заполнения, отправляем форму вручную
             this.submit();
         };
 

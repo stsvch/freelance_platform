@@ -2,17 +2,17 @@
 
 <div class="container">
     <h2>Изменить проект</h2>
-
-    @if (TempData["SuccessMessage"] != null)
+    @if (ViewBag.SuccessMessage != null)
     {
         <div class="alert alert-success">
-            @TempData["SuccessMessage"]
+            @ViewBag.SuccessMessage
         </div>
     }
-    @if (TempData["ErrorMessage"] != null)
+
+    @if (ViewBag.ErrorMessage != null)
     {
         <div class="alert alert-danger">
-            @TempData["ErrorMessage"]
+            @ViewBag.ErrorMessage
         </div>
     }
 
@@ -32,7 +32,10 @@
         <input for="id" type="hidden" name="id" value="@Model.Id" />
         <input for="freelancerId" type="hidden" name="freelancerId" value="" />
         <input for="status" type="hidden" name="status" value="" />
-        <button type="submit" class="btn btn-danger">Изменить</button>
-        <a href="@Url.Action("Index")" class="btn btn-secondary">Отмена</a>
+        <div class="d-inline-flex gap-2">
+            <button type="submit" class="btn btn-danger">Изменить</button>
+            <a href="@Url.Action("Index")" class="btn btn-secondary">Отмена</a>
+        </div>
+
     </form>
 </div>

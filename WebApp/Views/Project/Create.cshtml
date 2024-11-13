@@ -3,16 +3,17 @@
 <div class="container">
     <h2>Создать новый проект</h2>
 
-    @if (TempData["SuccessMessage"] != null)
+    @if (ViewBag.SuccessMessage != null)
     {
         <div class="alert alert-success">
-            @TempData["SuccessMessage"]
+            @ViewBag.SuccessMessage
         </div>
     }
-    @if (TempData["ErrorMessage"] != null)
+
+    @if (ViewBag.ErrorMessage != null)
     {
         <div class="alert alert-danger">
-            @TempData["ErrorMessage"]
+            @ViewBag.ErrorMessage
         </div>
     }
 

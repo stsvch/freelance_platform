@@ -3,10 +3,13 @@
 <div class="container">
     <h2>Удаление проекта</h2>
     <p>Вы уверены, что хотите удалить проект: <strong>@Model.Title</strong>?</p>
-    <form asp-action="DeleteProject" method="post">
-        <input for="id" type="hidden" name="id" value="@Model.Id" />
-        <button type="submit" class="btn btn-danger">Удалить</button>
-    </form>
-    <a href="@Url.Action("Index")" class="btn btn-secondary">Отмена</a>
+    <div class="d-inline-flex gap-2">
+        <form asp-action="DeleteProject" method="post">
+            <input type="hidden" name="id" value="@Model.Id" />
+            <button type="submit" class="btn btn-danger">Удалить</button>
+        </form>
+        <a href="@Url.Action("Index")" class="btn btn-secondary">Отмена</a>
+    </div>
 </div>
+
 

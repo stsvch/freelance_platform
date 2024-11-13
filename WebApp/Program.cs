@@ -43,6 +43,7 @@ builder.Services.AddSingleton<ProjectService>();
 builder.Services.AddSingleton<ProfileService>();
 builder.Services.AddScoped<ReviewService>();
 builder.Services.AddScoped<ResponseService>();
+builder.Services.AddScoped<AuthService>();  
 
 var app = builder.Build();
 
