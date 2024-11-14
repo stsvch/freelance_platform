@@ -4,13 +4,12 @@ using ProjectManagementService.Service;
 using RabbitMQ.Client;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddSingleton<IProjectService, ProjectService>();
 
-
-builder.Services.AddDbContext<ProjectDbContext>(options =>
+builder.Services.AddDbContext<IProjectDbContext, ProjectDbContext>(options =>
     options.UseMySql(
         builder.Configuration.GetConnectionString("DefaultConnection"),
         new MySqlServerVersion(new Version(8, 0, 39))));
+builder.Services.AddSingleton<IProjectService, ProjectService>();
 
 
 // Настройка RabbitMQ
@@ -33,7 +32,6 @@ builder.Services.AddSingleton<IModel>(sp =>
     return connection.CreateModel(); // Создаем канал для обмена сообщениями
 });
 
-// Регистрируем IMessageBus как Singleton
 builder.Services.AddSingleton<IMessageBus, RabbitMqMessageBus>();
 
 

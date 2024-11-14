@@ -2,6 +2,7 @@ using RabbitMQ.Client;
 using WebApp.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Logging.AddConsole();
 
 builder.Services.AddHttpClient();
 

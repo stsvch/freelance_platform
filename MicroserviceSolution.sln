@@ -13,6 +13,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NotificationService", "Noti
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebApp", "WebApp\WebApp.csproj", "{F9AC46A9-C991-41A5-9065-05607292DC47}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestProject", "TestProject\TestProject.csproj", "{EC4E6141-53E3-48B1-A58E-F229420F8F89}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{F9AC46A9-C991-41A5-9065-05607292DC47}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F9AC46A9-C991-41A5-9065-05607292DC47}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F9AC46A9-C991-41A5-9065-05607292DC47}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EC4E6141-53E3-48B1-A58E-F229420F8F89}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EC4E6141-53E3-48B1-A58E-F229420F8F89}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EC4E6141-53E3-48B1-A58E-F229420F8F89}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EC4E6141-53E3-48B1-A58E-F229420F8F89}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

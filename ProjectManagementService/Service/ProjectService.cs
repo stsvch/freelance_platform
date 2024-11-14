@@ -6,7 +6,6 @@ using System.Diagnostics;
 
 namespace ProjectManagementService.Service
 {
-    // Services/IProjectService.cs
     public interface IProjectService
     {
         Task CreateProjectAsync(dynamic projectMessage);
@@ -14,18 +13,18 @@ namespace ProjectManagementService.Service
         Task DeleteProjectAsync(dynamic projectMessage);
         Task HandleProjectMessage(string message);
         Task HandleResponseMessage(string message);
+
+        Task GetProjectsByFreelancerIdAsync(dynamic projectMessage);
     }
     public class ProjectService : IProjectService
     {
         private readonly IMessageBus _messageBus;
         private readonly IServiceProvider _serviceProvider;
-
         public ProjectService(IMessageBus messageBus, IServiceProvider serviceProvider)
         {
             _messageBus = messageBus;
             _serviceProvider = serviceProvider;
         }
-
         public void StartListeningForMessages()
         {
             _messageBus.ListenForMessages("ProjectQueue", async message =>
@@ -45,12 +44,10 @@ namespace ProjectManagementService.Service
                 }
             });
         }
-
         public async Task HandleProjectMessage(string message)
         {
             var projectMessage = JsonConvert.DeserializeObject<dynamic>(message);
             var action = projectMessage.Action.ToString();
-
             switch (action)
             {
                 case "Create":
@@ -116,7 +113,6 @@ namespace ProjectManagementService.Service
                             CorrelationId = message.CorrelationId,
                             Projects = projects
                         };
-
                         await _messageBus.PublishAsync("ProjectResponseQueue", JsonConvert.SerializeObject(successMessage));
                     }
                     catch (Exception ex)
@@ -127,12 +123,10 @@ namespace ProjectManagementService.Service
                 }
             }
         }
-
         public async Task HandleResponseMessage(string message)
         {
             var responseMessage = JsonConvert.DeserializeObject<dynamic>(message);
-            var action = responseMessage.Action.ToString();
-
+            var action = responseMessage?.Action?.ToString();
             switch (action)
             {
                 case "Accept":
@@ -143,7 +137,6 @@ namespace ProjectManagementService.Service
                     break;
             }
         }
-
         private async Task AcceptAsync(dynamic projectMessage)
         {
             using (var scope = _serviceProvider.CreateScope())
@@ -171,7 +164,6 @@ namespace ProjectManagementService.Service
                 }
             }
         }
-
         private async Task GetProjectListAsync(dynamic projectMessage)
         {
             using (var scope = _serviceProvider.CreateScope())
@@ -185,7 +177,6 @@ namespace ProjectManagementService.Service
                         var projects = await context.Projects
                                                     .Where(p => p.FreelancerId == null)
                                                     .ToListAsync();
-
                         if (projects.Any())
                         {
                             var successMessage = new
@@ -205,7 +196,6 @@ namespace ProjectManagementService.Service
                                     project.UpdatedAt
                                 }).ToList()
                             };
-
                             await _messageBus.PublishAsync("ProjectResponseQueue", JsonConvert.SerializeObject(successMessage));
                         }
                         else
@@ -219,7 +209,6 @@ namespace ProjectManagementService.Service
                             };
                             await _messageBus.PublishAsync("ProjectResponseQueue", JsonConvert.SerializeObject(errorMessage));
                         }
-
                         await transaction.CommitAsync();
                     }
                     catch (Exception ex)
@@ -231,14 +220,12 @@ namespace ProjectManagementService.Service
                             CorrelationId = projectMessage.CorrelationId.ToString(),
                             Message = ex.Message
                         };
-
                         await _messageBus.PublishAsync("ProjectResponseQueue", JsonConvert.SerializeObject(errorMessage));
                         await transaction.RollbackAsync();
                     }
                 }
             }
         }
-
         public async Task GetProjectsByFreelancerIdAsync(dynamic projectMessage)
         {
             using (var scope = _serviceProvider.CreateScope())
@@ -253,7 +240,6 @@ namespace ProjectManagementService.Service
                         var projects = await context.Projects
                                                     .Where(p => p.FreelancerId == freelancerId && p.Status != "Finished")
                                                     .ToListAsync();
-
                         if (projects.Any())
                         {
                             var successMessage = new
@@ -282,12 +268,11 @@ namespace ProjectManagementService.Service
                             {
                                 Action = "GetAllFreelancer",
                                 Status = "Error",
-                                CorrelationId = projectMessage.CorrelationId.ToString(),
+                                CorrelationId = projectMessage.CorrelationId,
                                 Message = "Проекты не найдены"
                             };
                             await _messageBus.PublishAsync("ProjectResponseQueue", JsonConvert.SerializeObject(errorMessage));
                         }
-
                         await transaction.CommitAsync();
                     }
                     catch (Exception ex)
@@ -299,20 +284,17 @@ namespace ProjectManagementService.Service
                             CorrelationId = projectMessage.CorrelationId.ToString(),
                             Message = ex.Message
                         };
-
                         await _messageBus.PublishAsync("ProjectResponseQueue", JsonConvert.SerializeObject(errorMessage));
                         await transaction.RollbackAsync();
                     }
                 }
             }
         }
-
         public async Task GetProjectsByClientIdAsync(dynamic projectMessage)
         {
             using (var scope = _serviceProvider.CreateScope())
             {
                 var context = scope.ServiceProvider.GetRequiredService<ProjectDbContext>();
-
                 using (var transaction = await context.Database.BeginTransactionAsync())
                 {
                     try
@@ -321,7 +303,6 @@ namespace ProjectManagementService.Service
                         var projects = await context.Projects
                                                     .Where(p => p.ClientId == clientId && p.Status != "Finished")
                                                     .ToListAsync();
-
                         if (projects.Any())
                         {
                             var successMessage = new
@@ -355,7 +336,6 @@ namespace ProjectManagementService.Service
                             };
                             await _messageBus.PublishAsync("ProjectResponseQueue", JsonConvert.SerializeObject(errorMessage));
                         }
-
                         await transaction.CommitAsync();
                     }
                     catch (Exception ex)
@@ -367,15 +347,12 @@ namespace ProjectManagementService.Service
                             CorrelationId = projectMessage.CorrelationId.ToString(),
                             Message = ex.Message
                         };
-
                         await _messageBus.PublishAsync("ProjectResponseQueue", JsonConvert.SerializeObject(errorMessage));
                         await transaction.RollbackAsync();
                     }
                 }
             }
         }
-
-
         public async Task GetProjectAsync(dynamic projectMessage)
         {
             using (var scope = _serviceProvider.CreateScope())
@@ -391,7 +368,6 @@ namespace ProjectManagementService.Service
                         var project = await context.Projects
                                                    .Where(p => p.Id == projectId)
                                                    .FirstOrDefaultAsync();
-
                         if (project != null)
                         {
                             var successMessage = new
@@ -444,7 +420,6 @@ namespace ProjectManagementService.Service
                 }
             }
         }
-
         public async Task CreateProjectAsync(dynamic projectMessage)
         {
             using (var scope = _serviceProvider.CreateScope())
@@ -493,7 +468,6 @@ namespace ProjectManagementService.Service
                 }
             }
         }
-
         public async Task UpdateProjectAsync(dynamic projectMessage)
         {
             using (var scope = _serviceProvider.CreateScope())
@@ -508,7 +482,7 @@ namespace ProjectManagementService.Service
                         if (project == null)
                             throw new Exception("Проект не найден");
                         project.Status = projectMessage.Status ?? project.Status;
-                        project.FreelancerId = projectMessage.FreelancerId?? project.FreelancerId;
+                        project.FreelancerId = projectMessage.FreelancerId ?? project.FreelancerId;
                         project.Title = projectMessage.Title ?? project.Title;
                         project.Description = projectMessage.Description ?? project.Description;
                         project.UpdatedAt = DateTime.UtcNow;
@@ -542,7 +516,6 @@ namespace ProjectManagementService.Service
                 }
             }
         }
-
         public async Task DeleteProjectAsync(dynamic projectMessage)
         {
             using (var scope = _serviceProvider.CreateScope())
@@ -584,6 +557,5 @@ namespace ProjectManagementService.Service
             }
         }
     }
-
 }
 

@@ -3,25 +3,16 @@
 <div class="container d-flex justify-content-center align-items-center vh-100">
     <div class="card p-4" style="width: 350px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
         <h2 class="text-center mb-4">Вход</h2>
-
-        @if (TempData["ErrorMessage"] != null)
-        {
-            <div class="alert alert-danger">
-                @TempData["ErrorMessage"]
-            </div>
-        }
-
-        <form asp-action="Login" method="post">
-
+        <form asp-action="Login" method="post" novalidate>
             <div class="mb-3">
-                <label for="email" class="form-label">Email</label>
-                <input type="email" class="form-control" id="email" asp-for="Email" required placeholder="Введите email" />
+                <label asp-for="Email" class="form-label">Email</label>
+                <input asp-for="Email" class="form-control" type="email" required placeholder="Введите email" />
                 <span asp-validation-for="Email" class="text-danger"></span>
             </div>
 
             <div class="mb-3">
-                <label for="password" class="form-label">Пароль</label>
-                <input type="password" class="form-control" id="password" asp-for="PasswordHash" required placeholder="Введите пароль" />
+                <label asp-for="PasswordHash" class="form-label">Пароль</label>
+                <input asp-for="PasswordHash" class="form-control" type="password" required placeholder="Введите пароль" />
                 <span asp-validation-for="PasswordHash" class="text-danger"></span>
             </div>
 
@@ -29,10 +20,17 @@
         </form>
 
         <div class="text-center mt-3">
-            <p class="text-muted">Нет аккаунта?<a href="/auth/register">Зарегистрироваться</a></p>
+            <p class="text-muted">Нет аккаунта? <a href="/auth/register">Зарегистрироваться</a></p>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
+
 
 
 

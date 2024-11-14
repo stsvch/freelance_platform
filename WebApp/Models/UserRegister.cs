@@ -1,15 +1,21 @@
-﻿namespace WebApp.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace WebApp.Models
 {
     public class UserRegister
     {
+        [Required]
         public string Username { get; set; }
+        [Required]
         public string PasswordHash { get; set; }
+        [Required]
         public string Email { get; set; }
-        public string Role { get; set; } // "Freelancer" или "Client"
-        public string? Skills { get; set; } // Только для фрилансера
-        public string? Bio { get; set; }    // Только для фрилансера
-        public string? CompanyName { get; set; } // Только для клиента
-        public string? Description { get; set; } // Только для клиента
+        [Required]
+        public string Role { get; set; } 
+        public string? Skills { get; set; } 
+        public string? Bio { get; set; }  
+        public string? CompanyName { get; set; } 
+        public string? Description { get; set; } 
     }
 
 }
