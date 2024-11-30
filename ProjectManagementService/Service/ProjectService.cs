@@ -430,11 +430,10 @@ namespace ProjectManagementService.Service
                 {
                     try
                     {
-                        var stopwatch = new Stopwatch();
-                        stopwatch.Start();
+
                         var project = new Project
                         {
-                            Title = projectMessage.Title,
+                            Title =projectMessage.Title,
                             Description = projectMessage.Description,
                             ClientId = projectMessage.ClientId,
                             FreelancerId = projectMessage.FreelancerId,
@@ -445,7 +444,8 @@ namespace ProjectManagementService.Service
 
                         context.Projects.Add(project);
                         await context.SaveChangesAsync();
-                                      
+
+                        await transaction.CommitAsync();
                         var successMessage = new
                         {
                             Action = "Create",
@@ -454,11 +454,8 @@ namespace ProjectManagementService.Service
                             CorrelationId = projectMessage.CorrelationId,
                             Message = "Проект успешно создан"
                         };
-                        
+
                         await _messageBus.PublishAsync("ProjectResponseQueue", JsonConvert.SerializeObject(successMessage));
-                        stopwatch.Stop();
-                        Console.WriteLine($"Time taken for : {stopwatch.ElapsedMilliseconds} ms");
-                        await transaction.CommitAsync();
                     }
                     catch (Exception ex)
                     {
@@ -556,6 +553,8 @@ namespace ProjectManagementService.Service
                 }
             }
         }
+
+
     }
 }
 

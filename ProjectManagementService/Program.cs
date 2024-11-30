@@ -11,8 +11,6 @@ builder.Services.AddDbContext<IProjectDbContext, ProjectDbContext>(options =>
         new MySqlServerVersion(new Version(8, 0, 39))));
 builder.Services.AddSingleton<IProjectService, ProjectService>();
 
-
-// Настройка RabbitMQ
 builder.Services.AddSingleton<IConnection>(sp =>
 {
     var config = sp.GetRequiredService<IConfiguration>();
@@ -23,13 +21,13 @@ builder.Services.AddSingleton<IConnection>(sp =>
         UserName = config["RabbitMQ:UserName"],
         Password = config["RabbitMQ:Password"]
     };
-    return factory.CreateConnection(); // Создаем подключение к RabbitMQ
+    return factory.CreateConnection(); 
 });
 
 builder.Services.AddSingleton<IModel>(sp =>
 {
     var connection = sp.GetRequiredService<IConnection>();
-    return connection.CreateModel(); // Создаем канал для обмена сообщениями
+    return connection.CreateModel();
 });
 
 builder.Services.AddSingleton<IMessageBus, RabbitMqMessageBus>();
@@ -39,20 +37,18 @@ builder.Services.AddControllers();
 
 var app = builder.Build();
 
-// Добавление миграций или создание базы данных
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<ProjectDbContext>();
     dbContext.Database.Migrate();
 }
 
-// Теперь после создания всех сервисов вызываем StartListeningForMessages()
 using (var scope = app.Services.CreateScope())
 {
     var projectService = scope.ServiceProvider.GetRequiredService<IProjectService>();
     if (projectService is ProjectService service)
     {
-        service.StartListeningForMessages(); // Начинаем прослушивание сообщений
+        service.StartListeningForMessages(); 
     }
 }
 

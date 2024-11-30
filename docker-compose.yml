@@ -1,0 +1,154 @@
+version: '3.8'
+
+services:
+  proj_db:
+    image: mysql:8
+    container_name: proj_db
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: project_management
+    ports:
+      - "3307:3306"  # Use port 3307 on the host
+    networks:
+      - mynetwork
+
+  reviewdb:
+    image: mysql:8
+    container_name: reviewdb
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: reviewdb
+    ports:
+      - "3308:3306"  # Use port 3308 on the host
+    networks:
+      - mynetwork
+
+  userdb:
+    image: mysql:8
+    container_name: userdb
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: userdb
+    ports:
+      - "3309:3306"  # Use port 3309 on the host
+    networks:
+      - mynetwork
+  # RabbitMQ
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "5672"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - mynetwork
+
+  # WebApp
+  webapp:
+    build:
+      context: ./WebApp
+      dockerfile: Dockerfile
+    container_name: webapp
+    ports:
+      - "7110:8080"
+    environment:
+      - ASPNETCORE_URLS=http://+:8080
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+    depends_on:
+      - rabbitmq
+    restart: on-failure
+    networks:
+      - mynetwork
+    entrypoint: ["dotnet", "WebApp.dll"]
+
+  # NotificationService
+  notificationservice:
+    build:
+      context: ./NotificationService
+      dockerfile: Dockerfile
+    container_name: notificationservice
+    ports:
+      - "7171:8080"
+    environment:
+      - ASPNETCORE_URLS=http://+:8080
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+    depends_on:
+      - rabbitmq
+    restart: on-failure
+    networks:
+      - mynetwork
+    entrypoint: ["dotnet", "NotificationService.dll"]
+
+  # ProjectManagementService
+  projectmanagementservice:
+    build:
+      context: ./ProjectManagementService
+      dockerfile: Dockerfile
+    container_name: projectmanagementservice
+    ports:
+      - "7229:8080"
+    environment:
+      - ASPNETCORE_URLS=http://+:8080
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+    depends_on:
+      - rabbitmq
+      - proj_db
+    restart: on-failure
+    networks:
+      - mynetwork
+    entrypoint: ["dotnet", "ProjectManagementService.dll"]
+
+  # RatingService
+  ratingservice:
+    build:
+      context: ./RatingService
+      dockerfile: Dockerfile
+    container_name: ratingservice
+    ports:
+      - "7027:8080"
+    environment:
+      - ASPNETCORE_URLS=http://+:8080
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+    depends_on:
+      - rabbitmq
+      - reviewdb 
+    restart: on-failure
+    networks:
+      - mynetwork
+    entrypoint: ["dotnet", "RatingService.dll"]
+
+  # UserMenegementService
+  usermenegementservice:
+    build:
+      context: ./UserMenegementService
+      dockerfile: Dockerfile
+    container_name: usermenegementservice
+    ports:
+      - "7145:8080"
+    environment:
+      - ASPNETCORE_URLS=http://+:8080
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+    depends_on:
+      - rabbitmq
+      - userdb 
+    restart: on-failure
+    networks:
+      - mynetwork
+    entrypoint: ["dotnet", "UserMenegementService.dll"]
+
+networks:
+  mynetwork:
+    driver: bridge
