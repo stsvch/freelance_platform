@@ -16,7 +16,7 @@ namespace WebApp.Services
         public async Task<List<Response>> GetClientRespose(int clientId)
         {
             var client = _httpClientFactory.CreateClient();
-            var response = await client.GetAsync($"https://localhost:7027/api/response/client/{clientId}");
+            var response = await client.GetAsync($"http://ratingservice:8080/api/response/client/{clientId}");
 
             if (response.IsSuccessStatusCode)
             {
@@ -29,7 +29,7 @@ namespace WebApp.Services
         public async Task<List<Response>> GetFreelancerRespose(int freelancerId)
         {
             var client = _httpClientFactory.CreateClient();
-            var response = await client.GetAsync($"https://localhost:7027/api/response/freelancer/{freelancerId}");
+            var response = await client.GetAsync($"http://ratingservice:8080/api/response/freelancer/{freelancerId}");
 
             if (response.IsSuccessStatusCode)
             {
@@ -42,7 +42,7 @@ namespace WebApp.Services
         public async Task<List<Response>> GetProjectRespose(int projectId)
         {
             var client = _httpClientFactory.CreateClient();
-            var response = await client.GetAsync($"https://localhost:7027/api/response/project/{projectId}");
+            var response = await client.GetAsync($"http://ratingservice:8080/api/response/project/{projectId}");
 
             if (response.IsSuccessStatusCode)
             {
@@ -59,7 +59,7 @@ namespace WebApp.Services
             var json = JsonConvert.SerializeObject(newResponse);
 
             var content = new StringContent(json, Encoding.UTF8, "application/json");
-            var response = await client.PostAsync("https://localhost:7027/api/response/create", content);
+            var response = await client.PostAsync("http://ratingservice:8080/api/response/create", content);
 
             if (response.IsSuccessStatusCode)
             {
@@ -76,7 +76,7 @@ namespace WebApp.Services
         {
             var client = _httpClientFactory.CreateClient();
             var content = new StringContent(JsonConvert.SerializeObject(id), Encoding.UTF8, "application/json");
-            var response = await client.PostAsync($"https://localhost:7027/api/response/delete/{id}", content);
+            var response = await client.PostAsync($"http://ratingservice:8080/api/response/delete/{id}", content);
 
             if (response.IsSuccessStatusCode)
             {
@@ -87,7 +87,7 @@ namespace WebApp.Services
         {
             var client = _httpClientFactory.CreateClient();
             var content = new StringContent(JsonConvert.SerializeObject(id), Encoding.UTF8, "application/json");
-            var response = await client.PostAsync($"https://localhost:7027/api/response/accept/{id}", content);
+            var response = await client.PostAsync($"http://ratingservice:8080/api/response/accept/{id}", content);
 
             if (response.IsSuccessStatusCode)
             {

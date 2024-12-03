@@ -31,7 +31,7 @@ namespace WebApp.Services
                 var client = _httpClientFactory.CreateClient();
                 var content = new StringContent(JsonConvert.SerializeObject(loginRequest), Encoding.UTF8, "application/json");
 
-                var response = await client.PostAsync("https://localhost:7145/api/auth/login", content);
+                var response = await client.PostAsync("http://127.0.0.1:7145/api/auth/login", content);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -89,7 +89,7 @@ namespace WebApp.Services
                 var client = _httpClientFactory.CreateClient();
                 var content = new StringContent(message, Encoding.UTF8, "application/json");
 
-                var response = await client.PostAsync("https://localhost:7145/api/auth/register", content);
+                var response = await client.PostAsync("http://usermenegementservice:8080/api/auth/register", content);
 
                 if (response.IsSuccessStatusCode)
                 {

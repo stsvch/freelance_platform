@@ -82,6 +82,7 @@ services:
       - ASPNETCORE_URLS=http://+:8080
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
+      - ASPNETCORE_ENVIRONMENT=Development
     depends_on:
       - rabbitmq
     restart: on-failure
@@ -101,6 +102,7 @@ services:
       - ASPNETCORE_URLS=http://+:8080
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
+      - ASPNETCORE_ENVIRONMENT=Development
     depends_on:
       - rabbitmq
       - proj_db
@@ -121,6 +123,7 @@ services:
       - ASPNETCORE_URLS=http://+:8080
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
+      - ASPNETCORE_ENVIRONMENT=Development
     depends_on:
       - rabbitmq
       - reviewdb 
@@ -141,6 +144,7 @@ services:
       - ASPNETCORE_URLS=http://+:8080
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
+      - ASPNETCORE_ENVIRONMENT=Development
     depends_on:
       - rabbitmq
       - userdb 

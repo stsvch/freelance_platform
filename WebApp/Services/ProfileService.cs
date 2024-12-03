@@ -17,7 +17,7 @@ namespace WebApp.Services
             try 
             {
                 var client = _httpClientFactory.CreateClient();
-                var response = await client.GetAsync($"https://localhost:7145/api/profile/freelancer/{userid}");
+                var response = await client.GetAsync($"http://usermenegementservice:8080/api/profile/freelancer/{userid}");
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -38,7 +38,7 @@ namespace WebApp.Services
             try
             {
                 var client = _httpClientFactory.CreateClient();
-                var response = await client.GetAsync($"https://localhost:7145/api/profile/client/{userid}");
+                var response = await client.GetAsync($"http://usermenegementservice:8080/api/profile/client/{userid}");
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -59,7 +59,7 @@ namespace WebApp.Services
             try
             {
                 var client = _httpClientFactory.CreateClient();
-                var response = await client.GetAsync($"https://localhost:7145/api/profile/freelancerId/{id}");
+                var response = await client.GetAsync($"http://usermenegementservice:8080/api/profile/freelancerId/{id}");
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -80,7 +80,7 @@ namespace WebApp.Services
             try
             {
                 var client = _httpClientFactory.CreateClient();
-                var response = await client.GetAsync($"https://localhost:7145/api/profile/clientId/{id}");
+                var response = await client.GetAsync($"http://usermenegementservice:8080/api/profile/clientId/{id}");
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -101,7 +101,7 @@ namespace WebApp.Services
             try
             {
                 var client = _httpClientFactory.CreateClient();
-                var response = await client.GetAsync($"https://localhost:7145/api/profile/clients?userId={userId}");
+                var response = await client.GetAsync($"http://usermenegementservice:8080/api/profile/clients?userId={userId}");
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -122,7 +122,7 @@ namespace WebApp.Services
             try
             {
                 var client = _httpClientFactory.CreateClient();
-                var response = await client.GetAsync($"https://localhost:7145/api/profile/freelancers?userId={userId}");
+                var response = await client.GetAsync($"http://usermenegementservice:8080/api/profile/freelancers?userId={userId}");
 
                 if (response.IsSuccessStatusCode)
                 {

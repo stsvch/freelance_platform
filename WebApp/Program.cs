@@ -53,7 +53,7 @@ _ = rabbitMqService.ListenForMessagesAsync("ProjectResponseQueue");
 
 app.UseSession();
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 app.UseStaticFiles(); 
 app.UseRouting();
 

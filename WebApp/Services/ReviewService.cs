@@ -16,7 +16,7 @@ namespace WebApp.Services
         public async Task<List<Review>> GetFreelacerReview(int freelancerId)
         {
             var client = _httpClientFactory.CreateClient();
-            var response = await client.GetAsync($"https://localhost:7027/api/review/freelancer/{freelancerId}");
+            var response = await client.GetAsync($"http://ratingservice:8080/api/review/freelancer/{freelancerId}");
 
             if (response.IsSuccessStatusCode)
             {
@@ -29,7 +29,7 @@ namespace WebApp.Services
         public async Task<List<Review>> GetProjectReview(int projectId)
         {
             var client = _httpClientFactory.CreateClient();
-            var response = await client.GetAsync($"https://localhost:7027/api/review/project/{projectId}");
+            var response = await client.GetAsync($"http://ratingservice:8080/api/review/project/{projectId}");
 
             if (response.IsSuccessStatusCode)
             {
@@ -46,7 +46,7 @@ namespace WebApp.Services
             var json = JsonConvert.SerializeObject(review);
 
             var content = new StringContent(json, Encoding.UTF8, "application/json");
-            var response = await client.PostAsync("https://localhost:7027/api/review/create", content);
+            var response = await client.PostAsync("http://ratingservice:8080/api/review/create", content);
 
             if (response.IsSuccessStatusCode)
             {
@@ -63,7 +63,7 @@ namespace WebApp.Services
         {
             var client = _httpClientFactory.CreateClient();
             var content = new StringContent(JsonConvert.SerializeObject(id), Encoding.UTF8, "application/json");
-            var response = await client.PostAsync($"https://localhost:7027/api/review/delete/{id}", content);
+            var response = await client.PostAsync($"http://ratingservice:8080/api/review/delete/{id}", content);
 
             if (response.IsSuccessStatusCode)
             {
