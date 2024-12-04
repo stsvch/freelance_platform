@@ -392,14 +392,14 @@ services:
 docker-compose up --build
 
 ---
-
-# NotificationService Documentation
+```
+### NotificationService Documentation
 ## Overview
 NotificationService is a microservice responsible for handling email notifications and message-based communication within a project management platform. It facilitates sending emails to clients and freelancers and integrates with RabbitMQ for asynchronous messaging.
 
 ### Features
-Email Notifications
-Sends customized email notifications to users.
+- **`Email Notifications`**
+- **`Sends customized email notifications to users`*
 Supports HTML-formatted email content.
 Messaging Integration
 Uses RabbitMQ for inter-service communication.
@@ -693,7 +693,7 @@ Example Message:
 ReviewQueue
 
 Handles review-related notifications.
-Configuration
+### Configuration
 appsettings.json
 {
   "ConnectionStrings": {
@@ -706,7 +706,7 @@ appsettings.json
     "Password": "guest"
   }
 }
-Deployment
+### Deployment
 Prerequisites
 Docker
 RabbitMQ Server
@@ -807,7 +807,7 @@ Query Parameters:
 userId (required): ID of the user to exclude.
 Responses:
 200 OK: List retrieved successfully.
-Database Schema
+### Database Schema
 Users Table
 Field	Type	Description
 Id	Primary Key	Unique identifier
@@ -825,7 +825,7 @@ UserId	Foreign Key	Links to Users.Id
 CompanyName	String	Name of the company
 Description	String	Client description
 Messaging
-RabbitMQ Integration
+### RabbitMQ Integration
 Queues:
 UserNotificationQueue: Publishes user-related notifications.
 NotificationUserQueue: Receives requests for user-related actions.
@@ -842,7 +842,7 @@ Response from UserNotificationQueue:
   "Mail": "freelancer@example.com",
   "CorrelationId": "unique-id"
 }
-Configuration
+### Configuration
 appsettings.json
 {
   "ConnectionStrings": {
@@ -860,7 +860,7 @@ appsettings.json
     "Password": "guest"
   }
 }
-Deployment
+### Deployment
 Prerequisites
 Docker
 RabbitMQ Server
