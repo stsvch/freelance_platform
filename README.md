@@ -387,17 +387,17 @@ services:
       - RabbitMQ__Password=guest
 ```
 
-Run the service:
+### Run the service:
 ```bash
 docker-compose up --build
 
 ---
 
-NotificationService Documentation
-Overview
+# NotificationService Documentation
+## Overview
 NotificationService is a microservice responsible for handling email notifications and message-based communication within a project management platform. It facilitates sending emails to clients and freelancers and integrates with RabbitMQ for asynchronous messaging.
 
-Features
+### Features
 Email Notifications
 Sends customized email notifications to users.
 Supports HTML-formatted email content.
@@ -410,7 +410,7 @@ ResponseToNotificationQueue: Handles responses for notification actions.
 API Endpoints
 The NotificationService operates primarily through RabbitMQ queues and internal triggers. API endpoints are not directly exposed to external users.
 
-Messaging and Queues
+### Messaging and Queues
 RabbitMQ Queues
 UserNotificationQueue:
 Receives requests for sending notifications.
@@ -435,7 +435,7 @@ Service Components
 1. EmailService
 Handles the process of sending email notifications using SMTP.
 
-Key Method
+### Key Method
 SendEmailAsync(Notification notification)
 Sends an email based on the provided Notification object.
 Parameters:
@@ -447,7 +447,7 @@ Handles common exceptions like invalid email formats and SMTP errors.
 2. NotifyService
 Orchestrates messaging between RabbitMQ and EmailService. It listens for messages and triggers the appropriate email notifications.
 
-Key Methods
+### Key Methods
 StartListeningForMessages()
 
 Listens for messages from RabbitMQ queues and processes them.
@@ -460,7 +460,7 @@ Sends an email using EmailService.
 3. RabbitMqService
 Manages interaction with RabbitMQ, including publishing and consuming messages.
 
-Key Methods
+### Key Methods
 PublishAsync(string queueName, string message)
 Publishes messages to the specified queue.
 ListenForMessages(string queueName, Func<string, Task> onMessageReceived)
@@ -487,7 +487,7 @@ Stores configuration settings for database connections, RabbitMQ, and email serv
     "Port": "465"
   }
 }
-Deployment
+### Deployment
 Prerequisites
 Docker
 RabbitMQ Server
@@ -511,11 +511,11 @@ Database Schema
 This service does not directly manage its database schema but integrates with user data through RabbitMQ messaging. External services provide user-related details when requested.
 
 
-RatingService Documentation
-Overview
+# RatingService Documentation
+## Overview
 The RatingService is responsible for handling project and freelancer reviews and responses in a freelance platform. It provides API endpoints for creating, retrieving, updating, and deleting reviews and responses. Additionally, it integrates with RabbitMQ for asynchronous messaging.
 
-Features
+### Features
 Response Management
 Retrieve responses for clients, freelancers, and projects.
 Create, update, and delete responses.
@@ -526,8 +526,8 @@ Create, update, and delete reviews.
 Messaging Integration
 Uses RabbitMQ for asynchronous communication.
 Sends messages on response creation and acceptance.
-API Endpoints
-Response Endpoints
+## API Endpoints
+### Response Endpoints
 Get Client Response
 
 GET /api/response/client/{clientId}
@@ -560,8 +560,6 @@ Create Response
 POST /api/response/create
 Creates a new response.
 Request Body:
-json
-Копировать код
 {
   "clientId": int,
   "freelancerId": int,
@@ -629,8 +627,6 @@ Create Review
 POST /api/review/create
 Creates a new review.
 Request Body:
-json
-Копировать код
 {
   "freelancerId": int,
   "projectId": int,
@@ -776,9 +772,7 @@ Responses:
 500 Internal Server Error: Server error.
 POST /api/auth/register
 Description: Registers a new user.
-Request Body:
-json
-Копировать код
+Request Body:###
 {
   "username": "string",
   "email": "string",
@@ -883,5 +877,5 @@ services:
       - RabbitMQ__HostName=rabbitmq
       - RabbitMQ__UserName=guest
       - RabbitMQ__Password=guest
-Run the service:
+### Run the service:
 docker-compose up --build
