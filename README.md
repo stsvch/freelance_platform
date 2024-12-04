@@ -482,7 +482,7 @@ MySQL Database
 Docker Compose
 Docker Compose
 Define services in docker-compose.yml:
-
+```yml
 version: '3.8'
 services:
   notification-service:
@@ -492,6 +492,7 @@ services:
       - RabbitMQ__HostName=rabbitmq
       - RabbitMQ__UserName=guest
       - RabbitMQ__Password=guest
+```
 Run the service:
 docker-compose up --build
 Database Schema
@@ -519,7 +520,7 @@ Get Client Response
 
 #### `GET /api/response/client/{clientId}`
 Retrieves responses associated with a client.
-Responses:
+- **Responses**:
 200 OK: Returns client responses.
 400 Bad Request: Invalid client ID.
 404 Not Found: No responses found.
@@ -528,7 +529,7 @@ Get Freelancer Response
 
 #### `GET /api/response/freelancer/{freelancerId}`
 Retrieves responses associated with a freelancer.
-Responses:
+- **Responses**:
 200 OK: Returns freelancer responses.
 400 Bad Request: Invalid freelancer ID.
 404 Not Found: No responses found.
@@ -537,7 +538,7 @@ Get Project Response
 
 #### `GET /api/response/project/{projectId}`
 Retrieves and deletes all responses associated with a project.
-Responses:
+- **Responses**:
 200 OK: All responses deleted.
 400 Bad Request: Invalid project ID.
 404 Not Found: No responses found.
@@ -555,7 +556,7 @@ Request Body:
   "message": "string"
 }
 ```
-Responses:
+- **Responses**:
 200 OK: Response created.
 400 Bad Request: Invalid data.
 500 Internal Server Error: Server error.
@@ -570,17 +571,16 @@ Request Body:
   "message": "string",
   "status": "string"
 }
-```
-Responses:
+- **Responses**:
 204 No Content: Response updated.
 400 Bad Request: Invalid data.
 404 Not Found: Response not found.
 500 Internal Server Error: Server error.
 Accept Response
 
-###} `POST /api/response/accept/{id}`
+#### `POST /api/response/accept/{id}`
 Accepts a response and deletes others for the project.
-Responses:
+- **Responses**:
 204 No Content: Response accepted.
 400 Bad Request: Invalid response ID.
 404 Not Found: Response not found.
@@ -589,7 +589,7 @@ Delete Response
 
 #### `POST /api/response/delete/{id}`
 Deletes a specific response.
-Responses:
+- **Responses**:
 204 No Content: Response deleted.
 400 Bad Request: Invalid response ID.
 404 Not Found: Response not found.
@@ -599,7 +599,7 @@ Get Freelancer Reviews
 
 #### `GET /api/review/freelancer/{freelancerId}`
 Retrieves all reviews for a freelancer.
-Responses:
+- **Responses**:
 200 OK: Returns reviews.
 400 Bad Request: Invalid freelancer ID.
 404 Not Found: No reviews found.
@@ -608,7 +608,7 @@ Get Project Reviews
 
 #### `GET /api/review/project/{projectId}`
 Retrieves all reviews for a project.
-Responses:
+- **Responses**:
 200 OK: Returns reviews.
 400 Bad Request: Invalid project ID.
 404 Not Found: No reviews found.
@@ -626,7 +626,7 @@ Request Body:
   "rating": float
 }
 ```
-Responses:
+- **Responses**:
 201 Created: Review created.
 400 Bad Request: Invalid data.
 500 Internal Server Error: Server error.
@@ -642,7 +642,7 @@ Request Body:
   "rating": float
 }
 ```
-Responses:
+- **Responses**:
 204 No Content: Review updated.
 400 Bad Request: Invalid data.
 404 Not Found: Review not found.
@@ -656,9 +656,10 @@ Responses:
 400 Bad Request: Invalid review ID.
 404 Not Found: Review not found.
 500 Internal Server Error: Server error.
-Database Schema
-Tables
-Reviews
+## Database Schema
+### Tables
+
+- *Reviews* 
 
 Id: Primary Key
 FreelancerId: Foreign Key
@@ -666,7 +667,8 @@ ProjectId: Foreign Key
 ClientId: Foreign Key
 Comment: String
 Rating: Float
-Responses
+
+- *Responses*
 
 Id: Primary Key
 FreelancerId: Foreign Key
@@ -761,13 +763,14 @@ docker-compose up --build
     "email": "string",
     "passwordHash": "string"
   }
-Responses:
+- **Responses**:
 200 OK: Authentication successful.
 401 Unauthorized: Invalid email or password.
 500 Internal Server Error: Server error.
-POST /api/auth/register
+#### `POST /api/auth/register`
 Description: Registers a new user.
-Request Body:###
+Request Body:
+```json
 {
   "username": "string",
   "email": "string",
@@ -775,35 +778,37 @@ Request Body:###
   "role": "Client | Freelancer",
   "additionalInfo": {}
 }
-Responses:
+```
+- **Responses**:
 201 Created: User registered successfully.
 400 Bad Request: Invalid input or email already exists.
 500 Internal Server Error: Server error.
-Profile Endpoints
-GET /api/profile/freelancer/{userId}
+  
+### Profile Endpoints
+### 'GET /api/profile/freelancer/{userId}'
 Description: Retrieves a freelancer's profile using their userId.
-Responses:
+- **Responses**:
 200 OK: Profile retrieved successfully.
 404 Not Found: No profile found for the provided ID.
-GET /api/profile/client/{userId}
+### `GET /api/profile/client/{userId}`
 Description: Retrieves a client’s profile using their userId.
-Responses:
+- **Responses**:
 200 OK: Profile retrieved successfully.
 404 Not Found: No profile found for the provided ID.
-GET /api/profile/freelancers
+### `GET /api/profile/freelancers`
 Description: Retrieves a list of freelancers excluding a specific userId.
 Query Parameters:
 userId (required): ID of the user to exclude.
-Responses:
+- **Responses**:
 200 OK: List retrieved successfully.
-GET /api/profile/clients
+### `GET /api/profile/clients`
 Description: Retrieves a list of clients excluding a specific userId.
 Query Parameters:
 userId (required): ID of the user to exclude.
-Responses:
+- **Responses**:
 200 OK: List retrieved successfully.
 ### Database Schema
-Users Table
+- *Users Table*
 Field	Type	Description
 Id	Primary Key	Unique identifier
 Email	String	Unique user email
