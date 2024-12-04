@@ -381,27 +381,24 @@ docker-compose up --build
 NotificationService is a microservice responsible for handling email notifications and message-based communication within a project management platform. It facilitates sending emails to clients and freelancers and integrates with RabbitMQ for asynchronous messaging.
 
 ### Features
-- **`Email Notifications`**
-- **`Sends customized email notifications to users`*
+- **Email Notifications**
+- **Sends customized email notifications to users**
 Supports HTML-formatted email content.
-Messaging Integration
+### Messaging Integration
 Uses RabbitMQ for inter-service communication.
-Queues:
-UserNotificationQueue: Processes user-related notification requests.
-NotificationUserQueue: Handles inter-service communication requests.
-ResponseToNotificationQueue: Handles responses for notification actions.
-API Endpoints
+### Queues:
+- `UserNotificationQueue`: Processes user-related notification requests.
+- `NotificationUserQueue`: Handles inter-service communication requests.
+- `ResponseToNotificationQueue`: Handles responses for notification actions.
+### API Endpoints
 The NotificationService operates primarily through RabbitMQ queues and internal triggers. API endpoints are not directly exposed to external users.
 
 ### Messaging and Queues
 RabbitMQ Queues
-UserNotificationQueue:
-Receives requests for sending notifications.
-NotificationUserQueue:
-Handles inter-service communication, such as retrieving user details for notifications.
-ResponseToNotificationQueue:
-Processes responses to notification-related actions.
-Sample Message Formats
+-`UserNotificationQueue`: Receives requests for sending notifications.
+- `NotificationUserQueue`: Handles inter-service communication, such as retrieving user details for notifications.
+- `ResponseToNotificationQueue`: Processes responses to notification-related actions.
+### Sample Message Formats
 Request to NotificationUserQueue
 ```json
 {
@@ -418,11 +415,11 @@ Response from ResponseToNotificationQueue:
   "CorrelationId": "unique-id"
 }
 ```
-Service Components
-1. EmailService
+## Service Components
+### EmailService
 Handles the process of sending email notifications using SMTP.
 
-### Key Method
+#### Key Method
 SendEmailAsync(Notification notification)
 Sends an email based on the provided Notification object.
 Parameters:
@@ -431,10 +428,10 @@ To: Recipient email address.
 Subject: Email subject.
 Message: Email body (supports HTML).
 Handles common exceptions like invalid email formats and SMTP errors.
-2. NotifyService
+### NotifyService
 Orchestrates messaging between RabbitMQ and EmailService. It listens for messages and triggers the appropriate email notifications.
 
-### Key Methods
+#### Key Methods
 StartListeningForMessages()
 
 Listens for messages from RabbitMQ queues and processes them.
@@ -444,10 +441,10 @@ Processes incoming messages from ResponseToNotificationQueue based on the action
 SendEmailAsync(string mail, string message)
 
 Sends an email using EmailService.
-3. RabbitMqService
+### RabbitMqService
 Manages interaction with RabbitMQ, including publishing and consuming messages.
 
-### Key Methods
+#### Key Methods
 PublishAsync(string queueName, string message)
 Publishes messages to the specified queue.
 ListenForMessages(string queueName, Func<string, Task> onMessageReceived)
@@ -475,7 +472,7 @@ Stores configuration settings for database connections, RabbitMQ, and email serv
   }
 }
 ### Deployment
-Prerequisites
+#### Prerequisites
 Docker
 RabbitMQ Server
 MySQL Database
@@ -504,14 +501,13 @@ This service does not directly manage its database schema but integrates with us
 The RatingService is responsible for handling project and freelancer reviews and responses in a freelance platform. It provides API endpoints for creating, retrieving, updating, and deleting reviews and responses. Additionally, it integrates with RabbitMQ for asynchronous messaging.
 
 ### Features
-Response Management
-Retrieve responses for clients, freelancers, and projects.
-Create, update, and delete responses.
-Accept responses with messaging integration.
-Review Management
-Retrieve reviews for freelancers and projects.
-Create, update, and delete reviews.
-Messaging Integration
+#### Response Management*
+- *Retrieve responses for clients, freelancers, and projects.*
+- *Create, update, and delete responses.*
+- *Accept responses with messaging integration.*
+#### Review Management
+- *Create, update, and delete reviews.*
+### Messaging Integration
 Uses RabbitMQ for asynchronous communication.
 Sends messages on response creation and acceptance.
 ## API Endpoints
@@ -660,27 +656,26 @@ Responses:
 ## Database Schema
 ### Tables
 
-- *Reviews* 
+- **Reviews** 
 
-Id: Primary Key
-FreelancerId: Foreign Key
-ProjectId: Foreign Key
-ClientId: Foreign Key
-Comment: String
-Rating: Float
+- `Id`: Primary Key
+- `FreelancerId`: Foreign Key
+- `ProjectId`: Foreign Key
+- `ClientId`: Foreign Key
+- `Comment`: String
+- `Rating`: Float
 
-- *Responses*
+- **Responses**
 
-Id: Primary Key
-FreelancerId: Foreign Key
-ClientId: Foreign Key
-ProjectId: Foreign Key
-Message: String
-Status: String
-Messaging with RabbitMQ
-Queues
-ResponseQueue
-
+- `Id`: Primary Key
+- `FreelancerId`: Foreign Key
+- `ClientId`: Foreign Key
+- `ProjectId`: Foreign Key
+- `Message`: String
+- `Status`: String
+## Messaging with RabbitMQ
+### Queues
+- **ResponseQueue**
 Publishes messages for response actions.
 Example Message:
 {
@@ -688,9 +683,9 @@ Example Message:
   "CorrelationId": "unique-id",
   "ClientId": int
 }
-ReviewQueue
-
+- **ReviewQueue**
 Handles review-related notifications.
+
 ### Configuration
 appsettings.json
 {
@@ -705,10 +700,13 @@ appsettings.json
   }
 }
 ### Deployment
-Prerequisites
-Docker
-RabbitMQ Server
-MySQL Database
+#### Prerequisites
+- *Docker*
+  ---
+- *RabbitMQ Server*
+  ---
+- *MySQL Database*
+  ---
 Docker Compose
 version: '3.8'
 services:
