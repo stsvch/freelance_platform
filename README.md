@@ -491,10 +491,11 @@ services:
       - RabbitMQ__Password=guest
 ```
 Run the service:
+```bash
 docker-compose up --build
-Database Schema
+```
+## Database Schema
 This service does not directly manage its database schema but integrates with user data through RabbitMQ messaging. External services provide user-related details when requested.
-
 
 # RatingService Documentation
 ## Overview
@@ -512,35 +513,35 @@ Uses RabbitMQ for asynchronous communication.
 Sends messages on response creation and acceptance.
 ## API Endpoints
 ### Response Endpoints
-Get Client Response
 
+### Get Client Response
 #### `GET /api/response/client/{clientId}`
 Retrieves responses associated with a client.
 - **Responses**:
-200 OK: Returns client responses.
-400 Bad Request: Invalid client ID.
-404 Not Found: No responses found.
-500 Internal Server Error: Server error.
-Get Freelancer Response
-
+- `200` OK: Returns client responses.
+- `400` Bad Request: Invalid client ID.
+- `404` Not Found: No responses found.
+- `500` Internal Server Error: Server error.
+- 
+### Get Freelancer Response
 #### `GET /api/response/freelancer/{freelancerId}`
 Retrieves responses associated with a freelancer.
 - **Responses**:
-200 OK: Returns freelancer responses.
-400 Bad Request: Invalid freelancer ID.
-404 Not Found: No responses found.
-500 Internal Server Error: Server error.
-Get Project Response
-
+- `200`OK: Returns freelancer responses.
+- `400` Bad Request: Invalid freelancer ID.
+- `404` Not Found: No responses found.
+- `500` Internal Server Error: Server error.
+  
+### Get Project Response
 #### `GET /api/response/project/{projectId}`
 Retrieves and deletes all responses associated with a project.
 - **Responses**:
-200 OK: All responses deleted.
-400 Bad Request: Invalid project ID.
-404 Not Found: No responses found.
-500 Internal Server Error: Server error.
-Create Response
-
+- `200` OK: All responses deleted.
+- `400` Bad Request: Invalid project ID.
+- `404` Not Found: No responses found.
+- `500` Internal Server Error: Server error.
+  
+### Create Response
 #### `POST /api/response/create`
 Creates a new response.
 Request Body:
@@ -553,11 +554,11 @@ Request Body:
 }
 ```
 - **Responses**:
-200 OK: Response created.
-400 Bad Request: Invalid data.
-500 Internal Server Error: Server error.
-Update Response
-
+- `200` OK: Response created.
+- `400` Bad Request: Invalid data.
+- `500` Internal Server Error: Server error.
+  
+### Update Response
 #### `POST /api/response/update`
 Updates an existing response.
 Request Body:
@@ -569,49 +570,49 @@ Request Body:
 }
 ```
 - **Responses**:
-204 No Content: Response updated.
-400 Bad Request: Invalid data.
-404 Not Found: Response not found.
-500 Internal Server Error: Server error.
-Accept Response
-
+- `204` No Content: Response updated.
+- `400` Bad Request: Invalid data.
+- `404` Not Found: Response not found.
+- `500` Internal Server Error: Server error.
+  
+### Accept Response
 #### `POST /api/response/accept/{id}`
 Accepts a response and deletes others for the project.
 - **Responses**:
-204 No Content: Response accepted.
-400 Bad Request: Invalid response ID.
-404 Not Found: Response not found.
-500 Internal Server Error: Server error.
-Delete Response
-
+- `204` No Content: Response accepted.
+- `400` Bad Request: Invalid response ID.
+- `404` Not Found: Response not found.
+- `500` Internal Server Error: Server error.
+  
+### Delete Response
 #### `POST /api/response/delete/{id}`
 Deletes a specific response.
 - **Responses**:
-204 No Content: Response deleted.
-400 Bad Request: Invalid response ID.
-404 Not Found: Response not found.
-500 Internal Server Error: Server error.
-Review Endpoints
-Get Freelancer Reviews
-
+- `204` No Content: Response deleted.
+- `400` Bad Request: Invalid response ID.
+- `404` Not Found: Response not found.
+- `500` Internal Server Error: Server error.
+  
+## Review Endpoints
+### Get Freelancer Reviews
 #### `GET /api/review/freelancer/{freelancerId}`
 Retrieves all reviews for a freelancer.
 - **Responses**:
-200 OK: Returns reviews.
-400 Bad Request: Invalid freelancer ID.
-404 Not Found: No reviews found.
-500 Internal Server Error: Server error.
-Get Project Reviews
-
+- `200` OK: Returns reviews.
+- `400` Bad Request: Invalid freelancer ID.
+- `404` Not Found: No reviews found.
+- `500` Internal Server Error: Server error.
+  
+### Get Project Reviews
 #### `GET /api/review/project/{projectId}`
 Retrieves all reviews for a project.
 - **Responses**:
-200 OK: Returns reviews.
-400 Bad Request: Invalid project ID.
-404 Not Found: No reviews found.
-500 Internal Server Error: Server error.
-Create Review
-
+- `200` OK: Returns reviews.
+- `400` Bad Request: Invalid project ID.
+- `404` Not Found: No reviews found.
+- `500` Internal Server Error: Server error.
+  
+### Create Review
 #### `POST /api/review/create`
 Creates a new review.
 Request Body:
@@ -624,11 +625,11 @@ Request Body:
 }
 ```
 - **Responses**:
-201 Created: Review created.
-400 Bad Request: Invalid data.
-500 Internal Server Error: Server error.
-Update Review
-
+- `201` Created: Review created.
+- `400` Bad Request: Invalid data.
+- `500` Internal Server Error: Server error.
+  
+### Update Review
 #### `POST /api/review/update`
 Updates an existing review.
 Request Body:
@@ -640,24 +641,23 @@ Request Body:
 }
 ```
 - **Responses**:
-204 No Content: Review updated.
-400 Bad Request: Invalid data.
-404 Not Found: Review not found.
-500 Internal Server Error: Server error.
-Delete Review
-
+- `204` No Content: Review updated.
+- `400` Bad Request: Invalid data.
+- `404` Not Found: Review not found.
+- `500` Internal Server Error: Server error.
+  
+### Delete Review
 #### `POST /api/review/delete/{reviewId}`
 Deletes a specific review.
-Responses:
-204 No Content: Review deleted.
-400 Bad Request: Invalid review ID.
-404 Not Found: Review not found.
-500 Internal Server Error: Server error.
+- **Responses**:
+- `204` No Content: Review deleted.
+- `400` Bad Request: Invalid review ID.
+- `404` Not Found: Review not found.
+- `500` Internal Server Error: Server error.
+- 
 ## Database Schema
 ### Tables
-
 - **Reviews** 
-
 - `Id`: Primary Key
 - `FreelancerId`: Foreign Key
 - `ProjectId`: Foreign Key
@@ -678,16 +678,19 @@ Responses:
 - **ResponseQueue**
 Publishes messages for response actions.
 Example Message:
+```json
 {
   "Action": "CreateResponse",
   "CorrelationId": "unique-id",
   "ClientId": int
 }
+```
 - **ReviewQueue**
 Handles review-related notifications.
 
 ### Configuration
 appsettings.json
+```json
 {
   "ConnectionStrings": {
     "DefaultConnection": "server=reviewdb;port=3306;database=reviewdb;user=root;password=root;"
@@ -699,15 +702,16 @@ appsettings.json
     "Password": "guest"
   }
 }
+```
 ### Deployment
 #### Prerequisites
 - *Docker*
-  ---
 - *RabbitMQ Server*
-  ---
 - *MySQL Database*
-  ---
-Docker Compose
+
+
+#### Docker Compose
+```yml
 version: '3.8'
 services:
   rating-service:
@@ -724,157 +728,6 @@ services:
     image: rabbitmq:management
   db:
     image: mysql:8.0
-Run the Service
-docker-compose up --build
-
-# UserManagementService Documentation
-
-## Overview
-**UserManagementService** is a microservice designed to handle user authentication, registration, and profile management for a freelance platform. It provides RESTful APIs for managing client and freelancer profiles and integrates with RabbitMQ for asynchronous messaging and notifications.
-
----
-
-## Features
-
-### **Authentication**
-- **Login**: Authenticate users with credentials.
-- **Registration**: Create new user accounts for clients and freelancers.
-
-### **Profile Management**
-- Retrieve and update profiles for both clients and freelancers.
-- Fetch filtered lists of clients or freelancers.
-
-### **Messaging Integration**
-- Asynchronous communication through RabbitMQ:
-  - Queues: `UserNotificationQueue` (outbound), `NotificationUserQueue` (inbound).
-
----
-
-## API Endpoints
-
-### **Authentication Endpoints**
-
-#### `POST /api/auth/login`
-- **Description**: Authenticates a user with email and password.
-- **Request Body**:
-  ```json
-  {
-    "email": "string",
-    "passwordHash": "string"
-  }
-- **Responses**:
-200 OK: Authentication successful.
-401 Unauthorized: Invalid email or password.
-500 Internal Server Error: Server error.
-#### `POST /api/auth/register`
-Description: Registers a new user.
-Request Body:
-```json
-{
-  "username": "string",
-  "email": "string",
-  "passwordHash": "string",
-  "role": "Client | Freelancer",
-  "additionalInfo": {}
-}
 ```
-- **Responses**:
-201 Created: User registered successfully.
-400 Bad Request: Invalid input or email already exists.
-500 Internal Server Error: Server error.
-  
-### Profile Endpoints
-### 'GET /api/profile/freelancer/{userId}'
-Description: Retrieves a freelancer's profile using their userId.
-- **Responses**:
-200 OK: Profile retrieved successfully.
-404 Not Found: No profile found for the provided ID.
-### `GET /api/profile/client/{userId}`
-Description: Retrieves a client’s profile using their userId.
-- **Responses**:
-200 OK: Profile retrieved successfully.
-404 Not Found: No profile found for the provided ID.
-### `GET /api/profile/freelancers`
-Description: Retrieves a list of freelancers excluding a specific userId.
-Query Parameters:
-userId (required): ID of the user to exclude.
-- **Responses**:
-200 OK: List retrieved successfully.
-### `GET /api/profile/clients`
-Description: Retrieves a list of clients excluding a specific userId.
-Query Parameters:
-userId (required): ID of the user to exclude.
-- **Responses**:
-200 OK: List retrieved successfully.
-### Database Schema
-- *Users Table*
-Field	Type	Description
-Id	Primary Key	Unique identifier
-Email	String	Unique user email
-PasswordHash	String	Encrypted password
-Role	String	Client or Freelancer
-FreelancerProfile Table
-Field	Type	Description
-UserId	Foreign Key	Links to Users.Id
-Skills	String[]	Array of skills
-Bio	String	Freelancer biography
-ClientProfile Table
-Field	Type	Description
-UserId	Foreign Key	Links to Users.Id
-CompanyName	String	Name of the company
-Description	String	Client description
-Messaging
-### RabbitMQ Integration
-Queues:
-UserNotificationQueue: Publishes user-related notifications.
-NotificationUserQueue: Receives requests for user-related actions.
-Message Format Examples
-Request to NotificationUserQueue:
-{
-  "Action": "GetFreelancerMail",
-  "FreelancerId": 123,
-  "CorrelationId": "unique-id"
-}
-Response from UserNotificationQueue:
-{
-  "Action": "GetFreelancerMail",
-  "Mail": "freelancer@example.com",
-  "CorrelationId": "unique-id"
-}
-### Configuration
-appsettings.json
-{
-  "ConnectionStrings": {
-    "DefaultConnection": "server=userdb;port=3306;database=userdb;user=root;password=root;"
-  },
-  "Jwt": {
-    "Key": "supersecretkey",
-    "Issuer": "YourIssuer",
-    "Audience": "YourAudience"
-  },
-  "RabbitMQ": {
-    "HostName": "rabbitmq",
-    "Port": 5672,
-    "UserName": "guest",
-    "Password": "guest"
-  }
-}
-### Deployment
-Prerequisites
-Docker
-RabbitMQ Server
-MySQL Database
-Docker Compose
-Define services in docker-compose.yml:
-
-version: '3.8'
-services:
-  user-management:
-    build: .
-    environment:
-      - ConnectionStrings__DefaultConnection=${DB_CONNECTION}
-      - RabbitMQ__HostName=rabbitmq
-      - RabbitMQ__UserName=guest
-      - RabbitMQ__Password=guest
-### Run the service:
+Run the Service
 docker-compose up --build
