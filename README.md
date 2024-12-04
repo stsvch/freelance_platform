@@ -184,29 +184,12 @@ docker-compose up --build
 
 ---
 
-## Testing
-
-### Unit Tests
-Use `xUnit` to test service logic and controllers:
-- Test login and registration scenarios.
-- Validate message handling logic for RabbitMQ.
-
-### Integration Tests
-- Use `TestServer` for HTTP API testing.
-- Mock RabbitMQ messages to verify asynchronous workflows.
-
----
-
 ## Logging
 
 ### Log Levels
 - Default: `Information`
 - For development: Increase to `Debug` or `Trace`.
-
-Example Log Entry:
-```
-[INFO] User with email user@example.com authenticated successfully.
-```
+---
 
 # ProjectManagementService Documentation
 
@@ -419,18 +402,22 @@ Handles inter-service communication, such as retrieving user details for notific
 ResponseToNotificationQueue:
 Processes responses to notification-related actions.
 Sample Message Formats
-Request to NotificationUserQueue:
+Request to NotificationUserQueue
+```json
 {
   "Action": "GetClientMail",
   "ClientId": 123,
   "CorrelationId": "unique-id"
 }
+```
 Response from ResponseToNotificationQueue:
+```json
 {
   "Action": "GetClientMail",
   "Mail": "client@example.com",
   "CorrelationId": "unique-id"
 }
+```
 Service Components
 1. EmailService
 Handles the process of sending email notifications using SMTP.
@@ -530,7 +517,7 @@ Sends messages on response creation and acceptance.
 ### Response Endpoints
 Get Client Response
 
-GET /api/response/client/{clientId}
+#### `GET /api/response/client/{clientId}`
 Retrieves responses associated with a client.
 Responses:
 200 OK: Returns client responses.
@@ -539,7 +526,7 @@ Responses:
 500 Internal Server Error: Server error.
 Get Freelancer Response
 
-GET /api/response/freelancer/{freelancerId}
+#### `GET /api/response/freelancer/{freelancerId}`
 Retrieves responses associated with a freelancer.
 Responses:
 200 OK: Returns freelancer responses.
@@ -548,7 +535,7 @@ Responses:
 500 Internal Server Error: Server error.
 Get Project Response
 
-GET /api/response/project/{projectId}
+#### `GET /api/response/project/{projectId}`
 Retrieves and deletes all responses associated with a project.
 Responses:
 200 OK: All responses deleted.
@@ -557,29 +544,33 @@ Responses:
 500 Internal Server Error: Server error.
 Create Response
 
-POST /api/response/create
+#### `POST /api/response/create`
 Creates a new response.
 Request Body:
+```json
 {
   "clientId": int,
   "freelancerId": int,
   "projectId": int,
   "message": "string"
 }
+```
 Responses:
 200 OK: Response created.
 400 Bad Request: Invalid data.
 500 Internal Server Error: Server error.
 Update Response
 
-POST /api/response/update
+#### `POST /api/response/update`
 Updates an existing response.
 Request Body:
+```json
 {
   "id": int,
   "message": "string",
   "status": "string"
 }
+```
 Responses:
 204 No Content: Response updated.
 400 Bad Request: Invalid data.
@@ -587,7 +578,7 @@ Responses:
 500 Internal Server Error: Server error.
 Accept Response
 
-POST /api/response/accept/{id}
+###} `POST /api/response/accept/{id}`
 Accepts a response and deletes others for the project.
 Responses:
 204 No Content: Response accepted.
@@ -596,7 +587,7 @@ Responses:
 500 Internal Server Error: Server error.
 Delete Response
 
-POST /api/response/delete/{id}
+#### `POST /api/response/delete/{id}`
 Deletes a specific response.
 Responses:
 204 No Content: Response deleted.
@@ -606,7 +597,7 @@ Responses:
 Review Endpoints
 Get Freelancer Reviews
 
-GET /api/review/freelancer/{freelancerId}
+#### `GET /api/review/freelancer/{freelancerId}`
 Retrieves all reviews for a freelancer.
 Responses:
 200 OK: Returns reviews.
@@ -615,7 +606,7 @@ Responses:
 500 Internal Server Error: Server error.
 Get Project Reviews
 
-GET /api/review/project/{projectId}
+#### `GET /api/review/project/{projectId}`
 Retrieves all reviews for a project.
 Responses:
 200 OK: Returns reviews.
@@ -624,29 +615,33 @@ Responses:
 500 Internal Server Error: Server error.
 Create Review
 
-POST /api/review/create
+#### `POST /api/review/create`
 Creates a new review.
 Request Body:
+```json
 {
   "freelancerId": int,
   "projectId": int,
   "comment": "string",
   "rating": float
 }
+```
 Responses:
 201 Created: Review created.
 400 Bad Request: Invalid data.
 500 Internal Server Error: Server error.
 Update Review
 
-POST /api/review/update
+#### `POST /api/review/update`
 Updates an existing review.
 Request Body:
+```json
 {
   "id": int,
   "comment": "string",
   "rating": float
 }
+```
 Responses:
 204 No Content: Review updated.
 400 Bad Request: Invalid data.
@@ -654,7 +649,7 @@ Responses:
 500 Internal Server Error: Server error.
 Delete Review
 
-POST /api/review/delete/{reviewId}
+#### `POST /api/review/delete/{reviewId}`
 Deletes a specific review.
 Responses:
 204 No Content: Review deleted.
