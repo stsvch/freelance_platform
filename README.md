@@ -571,6 +571,7 @@ Request Body:
   "message": "string",
   "status": "string"
 }
+```
 - **Responses**:
 204 No Content: Response updated.
 400 Bad Request: Invalid data.
